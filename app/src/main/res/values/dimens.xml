@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="viewpager_page_margin">8dp</dimen>
+    <dimen name="badge_count_textsize">10sp</dimen>
+</resources>

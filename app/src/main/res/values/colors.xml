@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!--    <color name="colorPrimary">#2FB255</color>
+    <color name="colorPrimaryDark">#2A9E4D</color>
+    <color name="colorSecondary">#2FB255</color>-->
+    <color name="colorPrimary">#5D1049</color>
+    <color name="colorPrimaryDark">#4e0d3a</color>
+    <color name="colorSecondary">#f7aa35</color>
+
+    <color name="white_50">#80FFFFFF</color>
+
+    <color name="text_out_of_stock">#F44336</color>
+</resources>

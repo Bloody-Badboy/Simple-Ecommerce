@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="dev.arpan.ecommerce.ui.home.HomeFragment"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/to_cart"
+            app:destination="@id/nav_cart" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_product_details"
+        android:name="dev.arpan.ecommerce.ui.product.details.ProductDetailsFragment"
+        android:label="Product Details"
+        tools:layout="@layout/fragment_product_details">
+        <argument
+            android:name="productId"
+            app:argType="long" />
+        <action
+            android:id="@+id/to_cart"
+            app:destination="@id/nav_cart" />
+    </fragment>
+
+    <action
+        android:id="@+id/to_nav_product_details"
+        app:destination="@id/nav_product_details" />
+
+    <fragment
+        android:id="@+id/nav_cart"
+        android:name="dev.arpan.ecommerce.ui.cart.CartFragment"
+        android:label="Cart"
+        tools:layout="@layout/fragment_cart" />
+</navigation>
