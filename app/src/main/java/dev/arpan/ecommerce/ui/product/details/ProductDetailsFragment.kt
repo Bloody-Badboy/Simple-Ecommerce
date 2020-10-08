@@ -11,9 +11,11 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.R
 import dev.arpan.ecommerce.databinding.FragmentProductDetailsBinding
+import dev.arpan.ecommerce.result.EventObserver
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.product.details.ProductDetailsFragmentDirections.Companion.toCart
@@ -50,8 +52,35 @@ class ProductDetailsFragment : NavigationDestinationFragment() {
             adapter = productListAdapter
         }
 
+        binding.fabAddToCart.setOnClickListener {
+            val selectedSize = (binding.rvSizes.adapter as? ProductSizesAdapter)?.selectedSize
+            viewModel.addItemToCart(args.productId, selectedSize)
+        }
+
         viewModel.productDetails.observe(viewLifecycleOwner, {
             productListAdapter.submitList(it.suggestedProducts)
+        })
+
+        viewModel.addToCartState.observe(viewLifecycleOwner, EventObserver {
+            when (it) {
+                is AddToCartState.Adding -> {
+                    binding.fabAddToCart.hide()
+                    Snackbar.make(
+                        binding.root,
+                        "Adding item to cart...",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+                is AddToCartState.Added -> {
+                    Snackbar.make(
+                        binding.root,
+                        "Item added to cart",
+                        Snackbar.LENGTH_LONG
+                    ).setAction("View Cart") {
+                        findNavController().navigate(toCart())
+                    }.show()
+                }
+            }
         })
 
         if (viewModel.productDetails.value == null) {

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.databinding.FragmentCartBinding
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
@@ -51,7 +52,7 @@ class CartFragment : NavigationDestinationFragment() {
                     )
                 )
             }, onCartItemRemove = { productId ->
-                viewModel.removeProductFromCart(productId)
+                showRemoveConfirmDialog(productId)
             })
 
         with(binding.rvProducts) {
@@ -65,5 +66,16 @@ class CartFragment : NavigationDestinationFragment() {
                 productListAdapter.submitList(it)
             }
         )
+    }
+
+    private fun showRemoveConfirmDialog(productId: Long) {
+        MaterialAlertDialogBuilder(requireContext()).apply {
+            setTitle("Remove Item")
+            setMessage("Are you sure to remove the item from cart ?")
+            setPositiveButton("Remove") { _, _ ->
+                viewModel.removeProductFromCart(productId)
+            }
+            setNegativeButton("Cancel", null)
+        }.show()
     }
 }

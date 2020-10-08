@@ -121,7 +121,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="4dp"
-            android:text="Size: S"
+            android:text="@{`Size: ` + product.selectedSize}"
+            android:visibility="@{product.selectedSize != null ? View.VISIBLE : View.GONE}"
             app:layout_constraintStart_toEndOf="@+id/iv_product_image"
             app:layout_constraintTop_toBottomOf="@+id/tv_price"
             tools:text="Size: S" />

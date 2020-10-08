@@ -7,5 +7,6 @@ data class CartItem(
     val mrp: String,
     val discount: String,
     val imageUrl: String,
+    val selectedSize: String?,
     val inStoke: Boolean
 )
