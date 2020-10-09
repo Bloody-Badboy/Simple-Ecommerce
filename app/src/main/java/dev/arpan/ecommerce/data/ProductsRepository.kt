@@ -1,7 +1,5 @@
 package dev.arpan.ecommerce.data
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import dev.arpan.ecommerce.data.model.AddToCart
 import dev.arpan.ecommerce.data.model.CartItem
 import dev.arpan.ecommerce.data.model.ProductCategory
@@ -12,16 +10,22 @@ import dev.arpan.ecommerce.data.source.remote.ProductsRemoteDataSource
 import dev.arpan.ecommerce.result.ResultWrapper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.withContext
+import kotlin.properties.Delegates
 
 interface ProductsRepository {
 
-    val cartItemCount: LiveData<Int>
+    val cartItemCountFlow: Flow<Int>
 
     suspend fun getCategories(): ResultWrapper<List<ProductCategory>>
 
     suspend fun getProducts(category: String): ResultWrapper<List<ProductItem>>
+
+    suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>>
 
     suspend fun getProductDetails(productId: Long): ResultWrapper<ProductDetails>
 
@@ -40,14 +44,22 @@ class DefaultProductsRepository(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ProductsRepository {
 
-    private val _cartItemCount = MutableLiveData(0)
-    override val cartItemCount: LiveData<Int>
-        get() = _cartItemCount
+    private var cartItemCount: Int by Delegates.observable(0) { _, _, newValue ->
+        cartItemCountChannel.offer(newValue)
+    }
+    override val cartItemCountFlow: Flow<Int>
+        get() = cartItemCountChannel.asFlow()
+
+    private val cartItemCountChannel: ConflatedBroadcastChannel<Int> by lazy {
+        ConflatedBroadcastChannel<Int>().also { channel ->
+            channel.offer(cartItemCount)
+        }
+    }
 
     private val cartProducts = mutableSetOf<AddToCart>()
 
     override suspend fun getCategories(): ResultWrapper<List<ProductCategory>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getCategories()
@@ -56,7 +68,7 @@ class DefaultProductsRepository(
     }
 
     override suspend fun getProducts(category: String): ResultWrapper<List<ProductItem>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProducts(
@@ -66,8 +78,17 @@ class DefaultProductsRepository(
         }
     }
 
+    override suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>> {
+        return withContext(dispatcher) {
+            delay(1000)
+            ResultWrapper.Success(
+                remoteDataSource.searchProduct(query)
+            )
+        }
+    }
+
     override suspend fun getProductDetails(productId: Long): ResultWrapper<ProductDetails> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProductDetails(productId)
@@ -76,15 +97,23 @@ class DefaultProductsRepository(
     }
 
     override suspend fun addProductToCart(addToCart: AddToCart): Boolean {
-        if (cartProducts.add(addToCart))
-            _cartItemCount.value = _cartItemCount.value?.inc()
-        return true
+        return withContext(dispatcher) {
+            delay(1000)
+            if (cartProducts.add(addToCart)) {
+                cartItemCount++
+            }
+            true
+        }
     }
 
     override suspend fun removeProductFromCart(productId: Long): Boolean {
-        if (cartProducts.removeAll { it.productId == productId })
-            _cartItemCount.value = _cartItemCount.value?.dec()
-        return true
+        return withContext(dispatcher) {
+            delay(1000)
+            if (cartProducts.removeAll { it.productId == productId }) {
+                cartItemCount--
+            }
+            true
+        }
     }
 
     override suspend fun isProductInCart(productId: Long): Boolean {
@@ -92,7 +121,7 @@ class DefaultProductsRepository(
     }
 
     override suspend fun getCartProducts(): ResultWrapper<List<CartItem>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             delay(1000)
             ResultWrapper.Success(cartProducts.map {
                 val details = remoteDataSource.getProductDetails(it.productId)

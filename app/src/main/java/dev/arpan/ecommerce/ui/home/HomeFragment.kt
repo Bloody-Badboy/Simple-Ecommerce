@@ -17,6 +17,7 @@ import dev.arpan.ecommerce.databinding.FragmentHomeBinding
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toCart
+import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toNavProductSearch
 import dev.arpan.ecommerce.ui.product.list.ProductListFragment
 
 @AndroidEntryPoint
@@ -52,11 +53,18 @@ class HomeFragment : NavigationDestinationFragment() {
             inflateMenu(R.menu.menu_home)
 
             setOnMenuItemClickListener {
-                if (it.itemId == R.id.action_cart) {
-                    findNavController().navigate(toCart())
-                    true
-                } else {
-                    false
+                when (it.itemId) {
+                    R.id.action_cart -> {
+                        findNavController().navigate(toCart())
+                        true
+                    }
+                    R.id.action_product_search -> {
+                        findNavController().navigate(toNavProductSearch())
+                        true
+                    }
+                    else -> {
+                        false
+                    }
                 }
             }
         }

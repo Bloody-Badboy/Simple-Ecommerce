@@ -3,6 +3,7 @@ package dev.arpan.ecommerce.ui.product.list
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
@@ -20,6 +21,10 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
     private val _products = MutableLiveData<List<ProductItem>>()
     val products: LiveData<List<ProductItem>>
         get() = _products
+
+    val isEmptyList: LiveData<Boolean> = Transformations.map(_products) {
+        it.isNullOrEmpty()
+    }
 
     fun fetchProducts(category: String) {
         viewModelScope.launch {

@@ -9,6 +9,7 @@ data class ProductDetails(
     val imageUrls: List<String> = emptyList(),
     var isWishlisted: Boolean,
     val inStoke: Boolean,
+    val rating: Double,
     val availableSize: List<String> = emptyList(),
     val suggestedProducts :List<ProductItem> = emptyList()
 ) {

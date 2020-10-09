@@ -19,7 +19,7 @@ import dev.arpan.ecommerce.result.EventObserver
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.product.details.ProductDetailsFragmentDirections.Companion.toCart
-import dev.arpan.ecommerce.ui.product.list.ProductListAdapter
+import dev.arpan.ecommerce.ui.product.common.ProductListAdapter
 
 @AndroidEntryPoint
 class ProductDetailsFragment : NavigationDestinationFragment() {

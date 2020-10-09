@@ -4,6 +4,7 @@ import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.ProductCategory
@@ -23,7 +24,7 @@ class HomeViewModel @ViewModelInject constructor(
     val productCategories: LiveData<List<ProductCategory>>
         get() = _productCategories
 
-    val cartItemCount = productsRepository.cartItemCount
+    val cartItemCount = productsRepository.cartItemCountFlow.asLiveData()
 
     init {
         viewModelScope.launch {

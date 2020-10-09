@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.databinding.FragmentProductListBinding
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections
+import dev.arpan.ecommerce.ui.product.common.ProductListAdapter
 
 @AndroidEntryPoint
 class ProductListFragment : Fragment() {

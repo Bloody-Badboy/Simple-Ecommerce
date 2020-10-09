@@ -14,6 +14,8 @@ interface ProductsRemoteDataSource {
 
     suspend fun getProducts(category: String): List<ProductItem>
 
+    suspend fun searchProduct(query: String): List<ProductItem>
+
     suspend fun getProductDetails(productId: Long): ProductDetails
 }
 
@@ -60,8 +62,19 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
         return mockProducts.filter { it.category == category }
     }
 
+    override suspend fun searchProduct(query: String): List<ProductItem> {
+        return mockProducts.filter { it.productName.contains(query) }
+    }
+
     override suspend fun getProductDetails(productId: Long): ProductDetails {
         val product = mockProducts.first { it.productId == productId }
+        val allSizes = listOf(
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+        )
         return ProductDetails(
             productId = product.productId,
             productName = product.productName,
@@ -76,7 +89,11 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             ),
             isWishlisted = product.isWishlisted,
             inStoke = product.inStoke,
-            availableSize = if (product.category == "jewellery" ) emptyList() else listOf("S", "2XL"),
+            rating = Random.nextDouble(1.toDouble(), 5.toDouble()),
+            availableSize = if (product.category == "jewellery") emptyList() else allSizes.subList(
+                0,
+                Random.nextInt(1, allSizes.size)
+            ),
             suggestedProducts = mockProducts.filter { it.category == product.category && it.productId != productId }
                 .take(8)
         )

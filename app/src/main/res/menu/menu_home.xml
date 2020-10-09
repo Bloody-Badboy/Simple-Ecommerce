@@ -2,6 +2,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="dev.arpan.ecommerce.ui.main.MainActivity">
+
+    <item
+        android:id="@+id/action_product_search"
+        android:icon="@drawable/ic_search"
+        android:orderInCategory="100"
+        android:title="Search"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_cart"
         android:icon="@drawable/toolbar_cart_icon"

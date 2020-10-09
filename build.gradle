@@ -18,6 +18,18 @@ allprojects {
         google()
         jcenter()
     }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_1_8.toString()
+            freeCompilerArgs += '-include-runtime'
+            freeCompilerArgs +=
+                    "-Xuse-experimental=" +
+                            "kotlin.Experimental," +
+                            "kotlinx.coroutines.ExperimentalCoroutinesApi," +
+                            "kotlinx.coroutines.FlowPreview"
+        }
+    }
 }
 
 task clean(type: Delete) {

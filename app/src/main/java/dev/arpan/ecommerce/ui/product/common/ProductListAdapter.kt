@@ -1,4 +1,4 @@
-package dev.arpan.ecommerce.ui.product.list
+package dev.arpan.ecommerce.ui.product.common
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

@@ -5,6 +5,7 @@ import android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.FloatRange
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -67,6 +68,27 @@ fun TextView.strikeThrough(show: Boolean) {
     } else {
         paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
     }
+}
+
+@BindingAdapter("productRating")
+fun ImageView.bindProductRating(
+    @FloatRange(
+        from = 0.toDouble(),
+        to = 5.toDouble()
+    ) rating: Double
+) {
+    val resId = when {
+        rating >= 4 -> {
+            R.drawable.ic_star_good
+        }
+        rating >= 3 -> {
+            R.drawable.ic_star_average
+        }
+        else -> {
+            R.drawable.ic_star_bad
+        }
+    }
+    setImageResource(resId)
 }
 
 @BindingAdapter(value = ["productImages", "indicator"], requireAll = false)

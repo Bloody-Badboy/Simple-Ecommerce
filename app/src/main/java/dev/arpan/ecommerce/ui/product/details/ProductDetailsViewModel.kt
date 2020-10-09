@@ -4,16 +4,14 @@ import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.AddToCart
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.result.Event
 import dev.arpan.ecommerce.result.ResultWrapper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ProductDetailsViewModel @ViewModelInject constructor(
     private val productsRepository: ProductsRepository
@@ -35,7 +33,7 @@ class ProductDetailsViewModel @ViewModelInject constructor(
     val isProductInCart: LiveData<Boolean>
         get() = _isProductInCart
 
-    val cartItemCount = productsRepository.cartItemCount
+    val cartItemCount = productsRepository.cartItemCountFlow.asLiveData()
 
     fun fetchProductDetails(productId: Long) {
         viewModelScope.launch {
@@ -66,9 +64,6 @@ class ProductDetailsViewModel @ViewModelInject constructor(
             )
 
             _addToCartState.value = Event(AddToCartState.Adding)
-            withContext(Dispatchers.IO) {
-                delay(3000L)
-            }
             productsRepository.addProductToCart(addToCart)
             _addToCartState.value = Event(AddToCartState.Added)
         }
