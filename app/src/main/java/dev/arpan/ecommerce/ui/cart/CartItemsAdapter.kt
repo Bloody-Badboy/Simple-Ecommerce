@@ -20,10 +20,11 @@ class CartItemsAdapter(
     companion object {
         private val COMPARATOR = object : DiffUtil.ItemCallback<CartItem>() {
             override fun areItemsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
-               false// oldItem == newItem
+                oldItem.productId == newItem.productId
 
             override fun areContentsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
-                false//oldItem == newItem
+                oldItem == newItem
+
         }
     }
 

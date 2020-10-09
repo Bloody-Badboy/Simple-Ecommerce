@@ -8,5 +8,6 @@ data class CartItem(
     val discount: String,
     val imageUrl: String,
     val selectedSize: String?,
-    val inStoke: Boolean
+    val inStoke: Boolean,
+    var isRemoving: Boolean = false
 )

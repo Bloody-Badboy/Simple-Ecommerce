@@ -48,8 +48,16 @@ class CartViewModel @ViewModelInject constructor(private val repository: Product
 
     fun removeProductFromCart(productId: Long) {
         viewModelScope.launch {
+
+            _products.value = _products.value?.map { cartItem ->
+                cartItem.copy(isRemoving = cartItem.productId == productId)
+            }
+
             repository.removeProductFromCart(productId)
-            _products.value?.filter { it.productId != productId }?.run {
+
+            _products.value?.filter { cartItem ->
+                cartItem.productId != productId
+            }?.run {
                 _priceDetails.value = calculateCartPriceDetails(this)
                 _products.value = this
             }
