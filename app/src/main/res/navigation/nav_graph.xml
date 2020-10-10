@@ -13,6 +13,12 @@
         <action
             android:id="@+id/to_cart"
             app:destination="@id/nav_cart" />
+        <action
+            android:id="@+id/to_product_search"
+            app:destination="@id/nav_product_search" />
+        <action
+            android:id="@+id/to_sort_sheet"
+            app:destination="@id/nav_sort_sheet" />
     </fragment>
 
     <fragment
@@ -32,10 +38,6 @@
         android:id="@+id/to_nav_product_details"
         app:destination="@id/nav_product_details" />
 
-    <action
-        android:id="@+id/to_nav_product_search"
-        app:destination="@id/nav_product_search" />
-
     <fragment
         android:id="@+id/nav_cart"
         android:name="dev.arpan.ecommerce.ui.cart.CartFragment"
@@ -46,4 +48,8 @@
         android:name="dev.arpan.ecommerce.ui.product.search.SearchProductFragment"
         android:label="Search Product"
         tools:layout="@layout/fragment_search_product" />
+    <dialog
+        android:id="@+id/nav_sort_sheet"
+        android:name="dev.arpan.ecommerce.ui.home.SortBottomSheetDialogFragment"
+        android:label="SortBottomSheetDialogFragment" />
 </navigation>

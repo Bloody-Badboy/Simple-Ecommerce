@@ -17,7 +17,7 @@ import dev.arpan.ecommerce.databinding.FragmentHomeBinding
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toCart
-import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toNavProductSearch
+import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toProductSearch
 import dev.arpan.ecommerce.ui.product.list.ProductListFragment
 
 @AndroidEntryPoint
@@ -39,6 +39,14 @@ class HomeFragment : NavigationDestinationFragment() {
 
         initViewPager()
 
+        binding.btnSort.setOnClickListener {
+            val sortDialog = SortBottomSheetDialogFragment.newInstance()
+            sortDialog.sortOrderSelected = {
+                // TODO: handle sortBy
+            }
+            sortDialog.show(childFragmentManager, SortBottomSheetDialogFragment.TAG)
+        }
+
         return binding.root
     }
 
@@ -59,7 +67,7 @@ class HomeFragment : NavigationDestinationFragment() {
                         true
                     }
                     R.id.action_product_search -> {
-                        findNavController().navigate(toNavProductSearch())
+                        findNavController().navigate(toProductSearch())
                         true
                     }
                     else -> {
