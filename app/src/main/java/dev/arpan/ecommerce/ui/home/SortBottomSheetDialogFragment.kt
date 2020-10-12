@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.databinding.FragmentHomeSortSheetBinding
-import dev.arpan.ecommerce.ui.SingleChoiceListAdapter
+import dev.arpan.ecommerce.ui.common.SingleChoiceListAdapter
 
 typealias OnSortOrderSelected = (SortBy) -> Unit
 
@@ -23,7 +23,7 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private val binding: FragmentHomeSortSheetBinding
         get() = requireNotNull(_binding)
 
-    var sortOrderSelected: OnSortOrderSelected? = null
+    var onSortOrderSelected: OnSortOrderSelected? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,15 +34,19 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         binding.ibClose.setOnClickListener { dismiss() }
 
-        binding.rvOptions.adapter = SingleChoiceListAdapter { position ->
-            if (position in SortBy.values().indices) {
-                val sortBy = SortBy.values()[position]
-                sortOrderSelected?.invoke(sortBy)
+        val options = SortBy.values()
+        binding.rvOptions.adapter =
+            SingleChoiceListAdapter { position ->
+                if (position in options.indices) {
+                    onSortOrderSelected?.invoke(options[position])
+                }
+                dismiss()
+            }.apply {
+                data = options.map { it.displayName }
+                if (options.isNotEmpty()) {
+                    selectedPosition = 0
+                }
             }
-            dismiss()
-        }.apply {
-            data = SortBy.values().map { it.displayName }
-        }
 
         return binding.root
     }

@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.R
 import dev.arpan.ecommerce.data.model.ProductCategory
@@ -17,8 +18,10 @@ import dev.arpan.ecommerce.databinding.FragmentHomeBinding
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toCart
+import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toProductFilter
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toProductSearch
 import dev.arpan.ecommerce.ui.product.list.ProductListFragment
+import dev.arpan.ecommerce.utils.onTabSelected
 
 @AndroidEntryPoint
 class HomeFragment : NavigationDestinationFragment() {
@@ -27,6 +30,7 @@ class HomeFragment : NavigationDestinationFragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding: FragmentHomeBinding
         get() = requireNotNull(_binding)
+    private var selectedCategory: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,10 +45,16 @@ class HomeFragment : NavigationDestinationFragment() {
 
         binding.btnSort.setOnClickListener {
             val sortDialog = SortBottomSheetDialogFragment.newInstance()
-            sortDialog.sortOrderSelected = {
+            sortDialog.onSortOrderSelected = {
                 // TODO: handle sortBy
             }
             sortDialog.show(childFragmentManager, SortBottomSheetDialogFragment.TAG)
+        }
+
+        binding.btnFilter.setOnClickListener {
+            selectedCategory?.let {
+                findNavController().navigate(toProductFilter(it))
+            }
         }
 
         return binding.root
@@ -102,9 +112,21 @@ class HomeFragment : NavigationDestinationFragment() {
             binding.tabs.setupWithViewPager(this)
         }
 
-        viewModel.productCategories.observe(viewLifecycleOwner, {
-            homeAdapter.categories = it
+        viewModel.productCategories.observe(viewLifecycleOwner, { categories ->
+            homeAdapter.categories = categories
+            if (viewModel.currentPageIndex in categories.indices) {
+                binding.viewpager.currentItem = viewModel.currentPageIndex
+            }
         })
+
+        binding.tabs.onTabSelected { tab ->
+            selectedCategory = homeAdapter.categories[tab.position].value
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.currentPageIndex = binding.viewpager.currentItem
     }
 
     inner class HomeAdapter(fm: FragmentManager) :
@@ -119,7 +141,7 @@ class HomeFragment : NavigationDestinationFragment() {
         override fun getCount(): Int = categories.size
 
         override fun getItem(position: Int) =
-            ProductListFragment.newInstance(categories[position].endPoint)
+            ProductListFragment.newInstance(categories[position].value)
 
         override fun getPageTitle(position: Int) = categories[position].name
     }

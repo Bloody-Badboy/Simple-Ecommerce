@@ -51,8 +51,9 @@ class ProductListFragment : Fragment() {
 
         initAdapter()
 
-        if (viewModel.products.value == null)
+        if (viewModel.products.value == null) {
             viewModel.fetchProducts(category)
+        }
         return binding.root
     }
 

@@ -2,6 +2,7 @@ package dev.arpan.ecommerce.data
 
 import dev.arpan.ecommerce.data.model.AddToCart
 import dev.arpan.ecommerce.data.model.CartItem
+import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
+private const val SIMULATE_NETWORK_DELAY = true
+
 interface ProductsRepository {
 
     val cartItemCountFlow: Flow<Int>
@@ -28,6 +31,8 @@ interface ProductsRepository {
     suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>>
 
     suspend fun getProductDetails(productId: Long): ResultWrapper<ProductDetails>
+
+    suspend fun getFiltersForCategory(category: String): ResultWrapper<List<Filter>>
 
     suspend fun addProductToCart(addToCart: AddToCart): Boolean
 
@@ -60,7 +65,8 @@ class DefaultProductsRepository(
 
     override suspend fun getCategories(): ResultWrapper<List<ProductCategory>> {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getCategories()
             )
@@ -69,7 +75,8 @@ class DefaultProductsRepository(
 
     override suspend fun getProducts(category: String): ResultWrapper<List<ProductItem>> {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProducts(
                     category
@@ -80,7 +87,8 @@ class DefaultProductsRepository(
 
     override suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>> {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.searchProduct(query)
             )
@@ -89,16 +97,33 @@ class DefaultProductsRepository(
 
     override suspend fun getProductDetails(productId: Long): ResultWrapper<ProductDetails> {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProductDetails(productId)
             )
         }
     }
 
+    override suspend fun getFiltersForCategory(category: String): ResultWrapper<List<Filter>> {
+        val cachedFilters = localDataSource.getCachedFilterListForCategory(category)
+        return if (cachedFilters != null) {
+            ResultWrapper.Success(cachedFilters)
+        } else {
+            withContext(dispatcher) {
+                if (SIMULATE_NETWORK_DELAY)
+                    delay(1000)
+                val filters = remoteDataSource.getFiltersForCategory(category)
+                localDataSource.cachedFilterListForCategory(category, filters)
+                ResultWrapper.Success(filters)
+            }
+        }
+    }
+
     override suspend fun addProductToCart(addToCart: AddToCart): Boolean {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             if (cartProducts.add(addToCart)) {
                 cartItemCount++
             }
@@ -108,7 +133,8 @@ class DefaultProductsRepository(
 
     override suspend fun removeProductFromCart(productId: Long): Boolean {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             if (cartProducts.removeAll { it.productId == productId }) {
                 cartItemCount--
             }
@@ -122,7 +148,8 @@ class DefaultProductsRepository(
 
     override suspend fun getCartProducts(): ResultWrapper<List<CartItem>> {
         return withContext(dispatcher) {
-            delay(1000)
+            if (SIMULATE_NETWORK_DELAY)
+                delay(1000)
             ResultWrapper.Success(cartProducts.map {
                 val details = remoteDataSource.getProductDetails(it.productId)
                 return@map CartItem(

@@ -1,5 +1,8 @@
 package dev.arpan.ecommerce.data.source.remote
 
+import dev.arpan.ecommerce.data.model.Filter
+import dev.arpan.ecommerce.data.model.FilterNameValue
+import dev.arpan.ecommerce.data.model.FilterType
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
@@ -17,6 +20,8 @@ interface ProductsRemoteDataSource {
     suspend fun searchProduct(query: String): List<ProductItem>
 
     suspend fun getProductDetails(productId: Long): ProductDetails
+
+    suspend fun getFiltersForCategory(category: String): List<Filter>
 }
 
 class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
@@ -44,7 +49,7 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
                         mrp = mrp.toString(),
                         discount = discount.toString(),
                         imageUrl = "https://picsum.photos/seed/$i/200/300?random=${i + 1}",
-                        category = mockCategories[categoryIndex].endPoint,
+                        category = mockCategories[categoryIndex].value,
                         tag = if (Random.nextBoolean() && inStock) "New Arrival" else null,
                         isWishlisted = Random.nextBoolean(),
                         inStoke = inStock
@@ -97,5 +102,60 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             suggestedProducts = mockProducts.filter { it.category == product.category && it.productId != productId }
                 .take(8)
         )
+    }
+
+    override suspend fun getFiltersForCategory(category: String): List<Filter> {
+        val filterOptionSize = Filter(
+            filterNameValue = FilterNameValue(
+                name = "Size",
+                value = "size"
+            ),
+            filterType = FilterType.MultipleChoice(
+                options = mutableListOf<FilterNameValue>().apply {
+                    add(FilterNameValue(name = "S", value = "s"))
+                    add(FilterNameValue(name = "M", value = "m"))
+                    add(FilterNameValue(name = "L", value = "l"))
+                    add(FilterNameValue(name = "XL", value = "xl"))
+                    add(FilterNameValue(name = "2XL", value = "xxl"))
+                }
+            )
+        )
+
+        val filterRating = Filter(
+            filterNameValue = FilterNameValue(
+                name = "Rating",
+                value = "rating"
+            ),
+            filterType = FilterType.SingleChoice(
+                options = listOf(
+                    FilterNameValue(name = "4.5 or higher", value = "4.5"),
+                    FilterNameValue(name = "3.5 or higher", value = "3.5"),
+                    FilterNameValue(name = "2.5 or higher", value = "2.5"),
+                    FilterNameValue(name = "1.5 or below", value = "1.5"),
+                )
+            )
+        )
+
+        val filterOptionDiscount = Filter(
+            filterNameValue = FilterNameValue(
+                name = "Discount",
+                value = "discount"
+            ),
+            filterType = FilterType.SingleChoice(
+                options = listOf(
+                    FilterNameValue(name = "40% or more", value = "40"),
+                    FilterNameValue(name = "30% or more", value = "30"),
+                    FilterNameValue(name = "20% or more", value = "20"),
+                    FilterNameValue(name = "10% or more", value = "10"),
+                    FilterNameValue(name = "10% or below", value = "0")
+                )
+            )
+        )
+
+        if (category == "jewellery") {
+            return listOf(filterRating, filterOptionDiscount)
+        } else {
+            return listOf(filterOptionSize, filterRating, filterOptionDiscount)
+        }
     }
 }

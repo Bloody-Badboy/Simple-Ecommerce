@@ -1,6 +1,7 @@
 package dev.arpan.ecommerce.ui.main
 
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity(), NavigationHost {
         )
     }
 
+    private val viewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {

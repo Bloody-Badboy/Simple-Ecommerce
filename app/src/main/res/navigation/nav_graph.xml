@@ -17,8 +17,8 @@
             android:id="@+id/to_product_search"
             app:destination="@id/nav_product_search" />
         <action
-            android:id="@+id/to_sort_sheet"
-            app:destination="@id/nav_sort_sheet" />
+            android:id="@+id/to_product_filter"
+            app:destination="@id/nav_product_filter" />
     </fragment>
 
     <fragment
@@ -48,8 +48,14 @@
         android:name="dev.arpan.ecommerce.ui.product.search.SearchProductFragment"
         android:label="Search Product"
         tools:layout="@layout/fragment_search_product" />
-    <dialog
-        android:id="@+id/nav_sort_sheet"
-        android:name="dev.arpan.ecommerce.ui.home.SortBottomSheetDialogFragment"
-        android:label="SortBottomSheetDialogFragment" />
+
+    <fragment
+        android:id="@+id/nav_product_filter"
+        android:name="dev.arpan.ecommerce.ui.filter.FilterFragment"
+        android:label="Filter"
+        tools:layout="@layout/fragment_filter" >
+        <argument
+            android:name="category"
+            app:argType="string" />
+    </fragment>
 </navigation>

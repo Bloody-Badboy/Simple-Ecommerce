@@ -24,7 +24,6 @@ class CartItemsAdapter(
 
             override fun areContentsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
                 oldItem == newItem
-
         }
     }
 
