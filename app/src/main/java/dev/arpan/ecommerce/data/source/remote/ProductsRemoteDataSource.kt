@@ -2,10 +2,12 @@ package dev.arpan.ecommerce.data.source.remote
 
 import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.data.model.FilterNameValue
+import dev.arpan.ecommerce.data.model.FilterOptions
 import dev.arpan.ecommerce.data.model.FilterType
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
+import dev.arpan.ecommerce.data.model.SortBy
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -15,7 +17,7 @@ interface ProductsRemoteDataSource {
 
     suspend fun getCategories(): List<ProductCategory>
 
-    suspend fun getProducts(category: String): List<ProductItem>
+    suspend fun getProducts(category: String, filterOptions: FilterOptions): List<ProductItem>
 
     suspend fun searchProduct(query: String): List<ProductItem>
 
@@ -63,8 +65,19 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
         return mockCategories
     }
 
-    override suspend fun getProducts(category: String): List<ProductItem> {
-        return mockProducts.filter { it.category == category }
+    override suspend fun getProducts(category: String, filterOptions: FilterOptions): List<ProductItem> {
+        val products = mockProducts.filter { it.category == category }
+        return when (filterOptions.sortBy) {
+            SortBy.PRICE_HIGH_TO_LOW -> {
+                products.sortedByDescending { it.price }
+            }
+            SortBy.PRICE_LOW_HIGH -> {
+                products.sortedBy { it.price }
+            }
+            else -> {
+                products
+            }
+        }
     }
 
     override suspend fun searchProduct(query: String): List<ProductItem> {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.databinding.FragmentHomeSortSheetBinding
@@ -19,6 +20,7 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
         fun newInstance() = SortBottomSheetDialogFragment()
     }
 
+    private val viewModel: HomeViewModel by viewModels({ requireParentFragment() })
     private var _binding: FragmentHomeSortSheetBinding? = null
     private val binding: FragmentHomeSortSheetBinding
         get() = requireNotNull(_binding)
@@ -35,18 +37,19 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
         binding.ibClose.setOnClickListener { dismiss() }
 
         val options = SortBy.values()
-        binding.rvOptions.adapter =
-            SingleChoiceListAdapter { position ->
-                if (position in options.indices) {
-                    onSortOrderSelected?.invoke(options[position])
-                }
-                dismiss()
-            }.apply {
-                data = options.map { it.displayName }
-                if (options.isNotEmpty()) {
-                    selectedPosition = 0
-                }
+
+        val singleChoiceListAdapter = SingleChoiceListAdapter { position ->
+            if (position in options.indices) {
+                onSortOrderSelected?.invoke(options[position])
             }
+            dismiss()
+        }
+        binding.rvOptions.adapter = singleChoiceListAdapter
+        singleChoiceListAdapter.data = options.map { it.displayName }
+
+        viewModel.sortBy.observe(viewLifecycleOwner, {
+            singleChoiceListAdapter.selectedPosition = options.indexOf(it)
+        })
 
         return binding.root
     }

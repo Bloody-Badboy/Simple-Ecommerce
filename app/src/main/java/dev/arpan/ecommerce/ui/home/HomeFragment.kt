@@ -46,7 +46,7 @@ class HomeFragment : NavigationDestinationFragment() {
         binding.btnSort.setOnClickListener {
             val sortDialog = SortBottomSheetDialogFragment.newInstance()
             sortDialog.onSortOrderSelected = {
-                // TODO: handle sortBy
+                viewModel.setSortByOrder(it)
             }
             sortDialog.show(childFragmentManager, SortBottomSheetDialogFragment.TAG)
         }

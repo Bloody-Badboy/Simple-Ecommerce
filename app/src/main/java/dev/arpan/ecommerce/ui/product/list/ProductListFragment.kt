@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
+import dev.arpan.ecommerce.data.model.FilterOptions
 import dev.arpan.ecommerce.databinding.FragmentProductListBinding
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections
 import dev.arpan.ecommerce.ui.product.common.ProductListAdapter
@@ -50,6 +51,13 @@ class ProductListFragment : Fragment() {
         binding.viewModel = viewModel
 
         initAdapter()
+
+        viewModel.sortBy.observe(viewLifecycleOwner, { sortBy ->
+            if (viewModel.previousSortByOrder != sortBy) {
+                viewModel.previousSortByOrder = sortBy
+                viewModel.fetchProducts(category, FilterOptions(sortBy = sortBy))
+            }
+        })
 
         if (viewModel.products.value == null) {
             viewModel.fetchProducts(category)

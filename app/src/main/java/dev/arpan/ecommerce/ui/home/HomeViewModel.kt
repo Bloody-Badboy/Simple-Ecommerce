@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
-import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.data.model.ProductCategory
+import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.result.ResultWrapper
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -16,8 +16,6 @@ import timber.log.Timber
 class HomeViewModel @ViewModelInject constructor(
     private val productsRepository: ProductsRepository
 ) : ViewModel() {
-
-    private val categoryFilterMap = mutableMapOf<String, List<Filter>>()
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean>
@@ -30,9 +28,8 @@ class HomeViewModel @ViewModelInject constructor(
 
     val cartItemCount = productsRepository.cartItemCountFlow.asLiveData()
 
-    private val _filters: MutableList<Filter> = mutableListOf()
-    val filters: MutableList<Filter>
-        get() = _filters
+    val sortBy: LiveData<SortBy>
+        get() = productsRepository.sortByOrderFlow.asLiveData()
 
     var currentPageIndex: Int = -1
 
@@ -58,29 +55,7 @@ class HomeViewModel @ViewModelInject constructor(
         }
     }
 
-    fun fetchCategoryFilters(category: String) {
-        viewModelScope.launch {
-            categoryFilterMap[category]?.let {
-                _filters.apply {
-                    clear()
-                    addAll(it)
-                }
-            } ?: kotlin.run {
-                when (val categoryFilterResponse =
-                    productsRepository.getFiltersForCategory(category)) {
-                    is ResultWrapper.NetworkError -> {
-                    }
-                    is ResultWrapper.GenericError -> {
-                    }
-                    is ResultWrapper.Success -> {
-                        categoryFilterMap[category] = categoryFilterResponse.value
-                        _filters.apply {
-                            clear()
-                            addAll(categoryFilterResponse.value)
-                        }
-                    }
-                }
-            }
-        }
+    fun setSortByOrder(sortBy: SortBy) {
+        productsRepository.sortBy = sortBy
     }
 }

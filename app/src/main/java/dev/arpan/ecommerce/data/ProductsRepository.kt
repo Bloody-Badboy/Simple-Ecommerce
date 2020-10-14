@@ -3,9 +3,11 @@ package dev.arpan.ecommerce.data
 import dev.arpan.ecommerce.data.model.AddToCart
 import dev.arpan.ecommerce.data.model.CartItem
 import dev.arpan.ecommerce.data.model.Filter
+import dev.arpan.ecommerce.data.model.FilterOptions
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
+import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.data.source.local.ProductsLocalDataSource
 import dev.arpan.ecommerce.data.source.remote.ProductsRemoteDataSource
 import dev.arpan.ecommerce.result.ResultWrapper
@@ -24,9 +26,13 @@ interface ProductsRepository {
 
     val cartItemCountFlow: Flow<Int>
 
+    val sortByOrderFlow: Flow<SortBy>
+
+    var sortBy: SortBy
+
     suspend fun getCategories(): ResultWrapper<List<ProductCategory>>
 
-    suspend fun getProducts(category: String): ResultWrapper<List<ProductItem>>
+    suspend fun getProducts(category: String, filterOptions: FilterOptions): ResultWrapper<List<ProductItem>>
 
     suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>>
 
@@ -52,8 +58,10 @@ class DefaultProductsRepository(
     private var cartItemCount: Int by Delegates.observable(0) { _, _, newValue ->
         cartItemCountChannel.offer(newValue)
     }
-    override val cartItemCountFlow: Flow<Int>
-        get() = cartItemCountChannel.asFlow()
+
+    override var sortBy: SortBy by Delegates.observable(SortBy.POPULARITY) { _, _, newValue ->
+        sortByChannel.offer(newValue)
+    }
 
     private val cartItemCountChannel: ConflatedBroadcastChannel<Int> by lazy {
         ConflatedBroadcastChannel<Int>().also { channel ->
@@ -61,7 +69,19 @@ class DefaultProductsRepository(
         }
     }
 
+    private val sortByChannel: ConflatedBroadcastChannel<SortBy> by lazy {
+        ConflatedBroadcastChannel<SortBy>().also { channel ->
+            channel.offer(sortBy)
+        }
+    }
+
     private val cartProducts = mutableSetOf<AddToCart>()
+
+    override val cartItemCountFlow: Flow<Int>
+        get() = cartItemCountChannel.asFlow()
+
+    override val sortByOrderFlow: Flow<SortBy>
+        get() = sortByChannel.asFlow()
 
     override suspend fun getCategories(): ResultWrapper<List<ProductCategory>> {
         return withContext(dispatcher) {
@@ -73,13 +93,16 @@ class DefaultProductsRepository(
         }
     }
 
-    override suspend fun getProducts(category: String): ResultWrapper<List<ProductItem>> {
+    override suspend fun getProducts(
+        category: String,
+        filterOptions: FilterOptions
+    ): ResultWrapper<List<ProductItem>> {
         return withContext(dispatcher) {
             if (SIMULATE_NETWORK_DELAY)
                 delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProducts(
-                    category
+                    category, filterOptions
                 )
             )
         }
