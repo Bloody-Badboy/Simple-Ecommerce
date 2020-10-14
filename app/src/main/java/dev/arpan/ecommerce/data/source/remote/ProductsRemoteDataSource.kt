@@ -9,7 +9,6 @@ import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
 import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
-import timber.log.Timber
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -45,7 +44,7 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             for (i in 0 until 100) {
                 val categoryIndex = Random.nextInt(mockCategories.size)
                 val inStock = Random.nextBoolean()
-                val mrp = Random.nextInt(1000)
+                val mrp = Random.nextInt(100, 1000)
                 val discount = max(10, Random.nextInt(50))
 
                 add(
@@ -74,9 +73,37 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
         category: String,
         selectedFilterOptions: SelectedFilterOptions
     ): List<ProductItem> {
-        val products = mockProducts.filter { it.category == category }
+        var products = mockProducts.filter { it.category == category }
 
-        Timber.d(selectedFilterOptions.toString())
+        selectedFilterOptions.filterMap.entries.forEach { entry ->
+            if (entry.key.value == "discount") {
+                if (entry.value.isNotEmpty()) {
+                    val discount = entry.value[0].value.toIntOrNull() ?: -1
+                    if (discount >= 0) {
+                        products = products.filter { it.discount.toInt() >= discount }
+                    }
+                }
+            }
+            if (entry.key.value == "price") {
+                if (entry.value.isNotEmpty()) {
+                    val splits = entry.value[0].value.split("-")
+                    products = if (splits.size >= 2) {
+                        val lower = splits[0].toInt()
+                        val higher = splits[1].toInt()
+                        products.filter { productItem -> productItem.price.toInt() in lower..higher }
+                    } else {
+                        val minVal = entry.value[0].value.toInt()
+                        products.filter { productItem -> productItem.price.toInt() >= minVal }
+                    }
+                }
+            }
+            if (entry.key.value == "availability") {
+                if (entry.value.isNotEmpty()) {
+                    products = products.filter { it.inStoke }
+                }
+            }
+        }
+
 
         return when (selectedFilterOptions.sortBy) {
             SortBy.PRICE_HIGH_TO_LOW -> {
@@ -176,10 +203,48 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             )
         )
 
+        val filterOptionPrice = Filter(
+            filterName = FilterName(
+                name = "Price",
+                value = "price"
+            ),
+            filterType = FilterType.SingleChoice(
+                options = listOf(
+                    FilterOption(name = "₹100 or below", value = "0-100"),
+                    FilterOption(name = "₹101 - ₹500", value = "101-200"),
+                    FilterOption(name = "₹501 - ₹1000", value = "101-200"),
+                    FilterOption(name = "₹1000 or above", value = "1000")
+                )
+            )
+        )
+
+        val filterOptionAvailability = Filter(
+            filterName = FilterName(
+                name = "Availability ",
+                value = "availability"
+            ),
+            filterType = FilterType.SingleChoice(
+                options = listOf(
+                    FilterOption(name = "Exclude Out Of Stock", value = "oos")
+                )
+            )
+        )
+
         if (category == "jewellery") {
-            return listOf(filterRating, filterOptionDiscount)
+            return listOf(
+                filterRating,
+                filterOptionDiscount,
+                filterOptionPrice,
+                filterOptionAvailability
+            )
         } else {
-            return listOf(filterOptionSize, filterRating, filterOptionDiscount)
+            return listOf(
+                filterOptionSize,
+                filterRating,
+                filterOptionDiscount,
+                filterOptionPrice,
+                filterOptionAvailability
+            )
         }
     }
 }
