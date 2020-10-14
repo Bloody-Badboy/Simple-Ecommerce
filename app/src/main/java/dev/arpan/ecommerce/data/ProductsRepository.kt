@@ -1,12 +1,15 @@
 package dev.arpan.ecommerce.data
 
 import dev.arpan.ecommerce.data.model.AddToCart
+import dev.arpan.ecommerce.data.model.AppliedFilterMap
 import dev.arpan.ecommerce.data.model.CartItem
 import dev.arpan.ecommerce.data.model.Filter
-import dev.arpan.ecommerce.data.model.FilterOptions
+import dev.arpan.ecommerce.data.model.FilterName
+import dev.arpan.ecommerce.data.model.FilterOption
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
+import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.data.source.local.ProductsLocalDataSource
 import dev.arpan.ecommerce.data.source.remote.ProductsRemoteDataSource
@@ -30,9 +33,14 @@ interface ProductsRepository {
 
     var sortBy: SortBy
 
+    val categoryAppliedFiltersFlow: Flow<Map<String, AppliedFilterMap>>
+
     suspend fun getCategories(): ResultWrapper<List<ProductCategory>>
 
-    suspend fun getProducts(category: String, filterOptions: FilterOptions): ResultWrapper<List<ProductItem>>
+    suspend fun getProducts(
+        category: String,
+        selectedFilterOptions: SelectedFilterOptions
+    ): ResultWrapper<List<ProductItem>>
 
     suspend fun searchProduct(query: String): ResultWrapper<List<ProductItem>>
 
@@ -47,6 +55,13 @@ interface ProductsRepository {
     suspend fun isProductInCart(productId: Long): Boolean
 
     suspend fun getCartProducts(): ResultWrapper<List<CartItem>>
+
+    fun setAppliedFilterForCategory(
+        category: String,
+        filterMap: AppliedFilterMap
+    )
+
+    fun getAppliedFilterForCategory(category: String): AppliedFilterMap
 }
 
 class DefaultProductsRepository(
@@ -59,7 +74,7 @@ class DefaultProductsRepository(
         cartItemCountChannel.offer(newValue)
     }
 
-    override var sortBy: SortBy by Delegates.observable(SortBy.POPULARITY) { _, _, newValue ->
+    override var sortBy: SortBy by Delegates.observable(SortBy.default()) { _, _, newValue ->
         sortByChannel.offer(newValue)
     }
 
@@ -75,6 +90,12 @@ class DefaultProductsRepository(
         }
     }
 
+    private val categoryAppliedFiltersChannel: ConflatedBroadcastChannel<Map<String, AppliedFilterMap>> by lazy {
+        ConflatedBroadcastChannel()
+    }
+
+    private val categoryAppliedFilterMap = mutableMapOf<String, AppliedFilterMap>()
+
     private val cartProducts = mutableSetOf<AddToCart>()
 
     override val cartItemCountFlow: Flow<Int>
@@ -82,6 +103,9 @@ class DefaultProductsRepository(
 
     override val sortByOrderFlow: Flow<SortBy>
         get() = sortByChannel.asFlow()
+
+    override val categoryAppliedFiltersFlow: Flow<Map<String, AppliedFilterMap>>
+        get() = categoryAppliedFiltersChannel.asFlow()
 
     override suspend fun getCategories(): ResultWrapper<List<ProductCategory>> {
         return withContext(dispatcher) {
@@ -95,14 +119,14 @@ class DefaultProductsRepository(
 
     override suspend fun getProducts(
         category: String,
-        filterOptions: FilterOptions
+        selectedFilterOptions: SelectedFilterOptions
     ): ResultWrapper<List<ProductItem>> {
         return withContext(dispatcher) {
             if (SIMULATE_NETWORK_DELAY)
                 delay(1000)
             ResultWrapper.Success(
                 remoteDataSource.getProducts(
-                    category, filterOptions
+                    category, selectedFilterOptions
                 )
             )
         }
@@ -187,5 +211,17 @@ class DefaultProductsRepository(
                 )
             })
         }
+    }
+
+    override fun setAppliedFilterForCategory(
+        category: String,
+        filterMap: Map<FilterName, List<FilterOption>>
+    ) {
+        categoryAppliedFilterMap[category] = filterMap
+        categoryAppliedFiltersChannel.offer(categoryAppliedFilterMap)
+    }
+
+    override fun getAppliedFilterForCategory(category: String): AppliedFilterMap {
+        return categoryAppliedFilterMap[category] ?: emptyMap()
     }
 }

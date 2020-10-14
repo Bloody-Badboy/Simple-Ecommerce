@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
+import dev.arpan.ecommerce.data.model.AppliedFilterMap
 import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.result.ResultWrapper
 import kotlinx.coroutines.launch
@@ -37,4 +38,12 @@ class FilterViewModel @ViewModelInject constructor(private val repository: Produ
             }
         }
     }
+
+    fun setAppliedFilterForCategory(
+        category: String,
+        filterMap: AppliedFilterMap
+    ) = repository.setAppliedFilterForCategory(category, filterMap)
+
+    fun getAppliedFilterForCategory(category: String) =
+        repository.getAppliedFilterForCategory(category)
 }

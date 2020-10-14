@@ -10,6 +10,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.data.model.Filter
+import dev.arpan.ecommerce.data.model.FilterName
+import dev.arpan.ecommerce.data.model.FilterOption
 import dev.arpan.ecommerce.data.model.FilterType
 import dev.arpan.ecommerce.databinding.FragmentFilterBinding
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
@@ -17,7 +19,6 @@ import dev.arpan.ecommerce.ui.common.FilterNameAdapter
 import dev.arpan.ecommerce.ui.common.FilterNameItem
 import dev.arpan.ecommerce.ui.common.MultipleChoiceListAdapter
 import dev.arpan.ecommerce.ui.common.SingleChoiceListAdapter
-import timber.log.Timber
 
 @AndroidEntryPoint
 class FilterFragment : NavigationDestinationFragment() {
@@ -43,7 +44,34 @@ class FilterFragment : NavigationDestinationFragment() {
         binding.viewModel = viewModel
 
         binding.btnCancel.setOnClickListener { findNavController().navigateUp() }
-        binding.btnApply.setOnClickListener { Timber.d("$selectedFilters") }
+        binding.btnApply.setOnClickListener {
+            val selectedFiltersMap = mutableMapOf<FilterName, List<FilterOption>>().apply {
+                for (i in 0 until selectedFilters.size()) {
+                    val options = mutableListOf<FilterOption>()
+                    selectedFilters[i].forEach { position ->
+                        val filterTypeOptions = when (val filterType = filters[i].filterType) {
+                            is FilterType.SingleChoice -> {
+                                filterType.options
+                            }
+                            is FilterType.MultipleChoice -> {
+                                filterType.options
+                            }
+                            else -> {
+                                throw IllegalArgumentException("Invalid FilterType: $filterType")
+                            }
+                        }
+                        options.add(filterTypeOptions[position])
+                    }
+                    put(filters[i].filterName, options)
+                }
+            }
+
+            viewModel.setAppliedFilterForCategory(
+                category = args.category,
+                filterMap = selectedFiltersMap
+            )
+            findNavController().navigateUp()
+        }
 
         filterNameAdapter.onFilterSelected = { position ->
             updateFilterNameList(position)
@@ -58,6 +86,9 @@ class FilterFragment : NavigationDestinationFragment() {
             for (i in it.indices) {
                 selectedFilters.put(i, emptyList())
             }
+
+            mapAppliedFilterMapToIndices()
+
             if (it.isNotEmpty()) {
                 updateFilterNameList(0)
                 updateFilterOptionsList(0, it[0].filterType)
@@ -74,10 +105,40 @@ class FilterFragment : NavigationDestinationFragment() {
         _binding = null
     }
 
+    private fun mapAppliedFilterMapToIndices() {
+        val appliedMap = viewModel.getAppliedFilterForCategory(args.category)
+        appliedMap.iterator().forEach { entry ->
+            val filterNameIndex = filters.indexOfFirst { filter ->
+                filter.filterName == entry.key
+            }
+            if (filterNameIndex >= 0) {
+                val positions = mutableListOf<Int>()
+                entry.value.forEach {
+                    val options = when (val filterType = filters[filterNameIndex].filterType) {
+                        is FilterType.SingleChoice -> {
+                            filterType.options
+                        }
+                        is FilterType.MultipleChoice -> {
+                            filterType.options
+                        }
+                        else -> {
+                            throw IllegalArgumentException("Invalid FilterType: $filterType")
+                        }
+                    }
+                    val index = options.indexOfFirst { option -> option == it }
+                    if (index >= 0) {
+                        positions.add(index)
+                    }
+                }
+                selectedFilters.put(filterNameIndex, positions)
+            }
+        }
+    }
+
     private fun updateFilterNameList(filterNameIndex: Int) {
         filterNameAdapter.submitList(filters.mapIndexed { index, filter ->
             FilterNameItem(
-                text = filter.filterNameValue.name,
+                text = filter.filterName.name,
                 inSelected = index == filterNameIndex,
                 isFilterApplied = selectedFilters[index].isNotEmpty()
             )

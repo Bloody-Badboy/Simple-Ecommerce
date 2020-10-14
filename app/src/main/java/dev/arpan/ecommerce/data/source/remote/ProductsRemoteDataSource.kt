@@ -1,13 +1,15 @@
 package dev.arpan.ecommerce.data.source.remote
 
 import dev.arpan.ecommerce.data.model.Filter
-import dev.arpan.ecommerce.data.model.FilterNameValue
-import dev.arpan.ecommerce.data.model.FilterOptions
+import dev.arpan.ecommerce.data.model.FilterName
+import dev.arpan.ecommerce.data.model.FilterOption
 import dev.arpan.ecommerce.data.model.FilterType
 import dev.arpan.ecommerce.data.model.ProductCategory
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
+import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
+import timber.log.Timber
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -17,7 +19,10 @@ interface ProductsRemoteDataSource {
 
     suspend fun getCategories(): List<ProductCategory>
 
-    suspend fun getProducts(category: String, filterOptions: FilterOptions): List<ProductItem>
+    suspend fun getProducts(
+        category: String,
+        selectedFilterOptions: SelectedFilterOptions
+    ): List<ProductItem>
 
     suspend fun searchProduct(query: String): List<ProductItem>
 
@@ -65,9 +70,15 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
         return mockCategories
     }
 
-    override suspend fun getProducts(category: String, filterOptions: FilterOptions): List<ProductItem> {
+    override suspend fun getProducts(
+        category: String,
+        selectedFilterOptions: SelectedFilterOptions
+    ): List<ProductItem> {
         val products = mockProducts.filter { it.category == category }
-        return when (filterOptions.sortBy) {
+
+        Timber.d(selectedFilterOptions.toString())
+
+        return when (selectedFilterOptions.sortBy) {
             SortBy.PRICE_HIGH_TO_LOW -> {
                 products.sortedByDescending { it.price }
             }
@@ -119,48 +130,48 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
 
     override suspend fun getFiltersForCategory(category: String): List<Filter> {
         val filterOptionSize = Filter(
-            filterNameValue = FilterNameValue(
+            filterName = FilterName(
                 name = "Size",
                 value = "size"
             ),
             filterType = FilterType.MultipleChoice(
-                options = mutableListOf<FilterNameValue>().apply {
-                    add(FilterNameValue(name = "S", value = "s"))
-                    add(FilterNameValue(name = "M", value = "m"))
-                    add(FilterNameValue(name = "L", value = "l"))
-                    add(FilterNameValue(name = "XL", value = "xl"))
-                    add(FilterNameValue(name = "2XL", value = "xxl"))
+                options = mutableListOf<FilterOption>().apply {
+                    add(FilterOption(name = "S", value = "s"))
+                    add(FilterOption(name = "M", value = "m"))
+                    add(FilterOption(name = "L", value = "l"))
+                    add(FilterOption(name = "XL", value = "xl"))
+                    add(FilterOption(name = "2XL", value = "xxl"))
                 }
             )
         )
 
         val filterRating = Filter(
-            filterNameValue = FilterNameValue(
+            filterName = FilterName(
                 name = "Rating",
                 value = "rating"
             ),
             filterType = FilterType.SingleChoice(
                 options = listOf(
-                    FilterNameValue(name = "4.5 or higher", value = "4.5"),
-                    FilterNameValue(name = "3.5 or higher", value = "3.5"),
-                    FilterNameValue(name = "2.5 or higher", value = "2.5"),
-                    FilterNameValue(name = "1.5 or below", value = "1.5"),
+                    FilterOption(name = "4.5 or higher", value = "4.5"),
+                    FilterOption(name = "3.5 or higher", value = "3.5"),
+                    FilterOption(name = "2.5 or higher", value = "2.5"),
+                    FilterOption(name = "1.5 or below", value = "1.5"),
                 )
             )
         )
 
         val filterOptionDiscount = Filter(
-            filterNameValue = FilterNameValue(
+            filterName = FilterName(
                 name = "Discount",
                 value = "discount"
             ),
             filterType = FilterType.SingleChoice(
                 options = listOf(
-                    FilterNameValue(name = "40% or more", value = "40"),
-                    FilterNameValue(name = "30% or more", value = "30"),
-                    FilterNameValue(name = "20% or more", value = "20"),
-                    FilterNameValue(name = "10% or more", value = "10"),
-                    FilterNameValue(name = "10% or below", value = "0")
+                    FilterOption(name = "40% or more", value = "40"),
+                    FilterOption(name = "30% or more", value = "30"),
+                    FilterOption(name = "20% or more", value = "20"),
+                    FilterOption(name = "10% or more", value = "10"),
+                    FilterOption(name = "10% or below", value = "0")
                 )
             )
         )

@@ -8,10 +8,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
-import dev.arpan.ecommerce.data.model.FilterOptions
+import dev.arpan.ecommerce.data.model.AppliedFilterMap
 import dev.arpan.ecommerce.data.model.ProductItem
+import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.result.ResultWrapper
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class ProductListViewModel @ViewModelInject constructor(private val repository: ProductsRepository) :
@@ -29,18 +31,28 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
         it.isNullOrEmpty()
     }
 
-    var previousSortByOrder: SortBy? = null
+    var previousSortByOrder: SortBy = SortBy.default()
+    var previousAppliedFilterMap: AppliedFilterMap = emptyMap()
 
     val sortBy: LiveData<SortBy>
         get() = repository.sortByOrderFlow.asLiveData()
 
+    private val _appliedFilterMap = MutableLiveData<AppliedFilterMap>()
+    val appliedFilterMap: LiveData<AppliedFilterMap>
+        get() = _appliedFilterMap
+
     fun fetchProducts(
         category: String,
-        sortBy: FilterOptions = FilterOptions(sortBy = repository.sortBy)
+        sortBy: SortBy = repository.sortBy,
+        filterMap: AppliedFilterMap = repository.getAppliedFilterForCategory(category)
     ) {
+        val selectedFilterOptions = SelectedFilterOptions(
+            sortBy = sortBy,
+            filterMap = filterMap
+        )
         viewModelScope.launch {
             _isLoading.value = true
-            val response = repository.getProducts(category, sortBy)
+            val response = repository.getProducts(category, selectedFilterOptions)
             _isLoading.value = false
             when (response) {
                 is ResultWrapper.NetworkError -> {
@@ -49,6 +61,19 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
                 }
                 is ResultWrapper.Success -> {
                     _products.value = response.value
+                }
+            }
+        }
+    }
+
+    fun observeAppliedFilterForCategory(category: String) {
+        viewModelScope.launch {
+            repository.categoryAppliedFiltersFlow.collectLatest { map ->
+                map.iterator().forEach {
+                    if (it.key == category) {
+                        _appliedFilterMap.value = it.value
+                        return@forEach
+                    }
                 }
             }
         }
