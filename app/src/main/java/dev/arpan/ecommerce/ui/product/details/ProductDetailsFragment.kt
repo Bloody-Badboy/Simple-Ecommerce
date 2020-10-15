@@ -17,7 +17,6 @@ import dev.arpan.ecommerce.R
 import dev.arpan.ecommerce.databinding.FragmentProductDetailsBinding
 import dev.arpan.ecommerce.result.EventObserver
 import dev.arpan.ecommerce.ui.NavigationDestinationFragment
-import dev.arpan.ecommerce.ui.common.SingleChoiceListAdapter
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.product.common.ProductListAdapter
 import dev.arpan.ecommerce.ui.product.details.ProductDetailsFragmentDirections.Companion.toCart
@@ -54,13 +53,11 @@ class ProductDetailsFragment : NavigationDestinationFragment() {
         }
 
         binding.fabAddToCart.setOnClickListener {
-            var selectedSize: String? = null
-            (binding.rvSizes.adapter as? SingleChoiceListAdapter)?.run {
-                if (selectedPosition in data.indices) {
-                    selectedSize = data[selectedPosition]
-                }
+            var size: String? = null
+            (binding.rvSizes.adapter as? ProductSizesAdapter)?.run {
+                size = selectedSize
             }
-            viewModel.addItemToCart(args.productId, selectedSize)
+            viewModel.addItemToCart(args.productId, size)
         }
 
         viewModel.productDetails.observe(viewLifecycleOwner, {
