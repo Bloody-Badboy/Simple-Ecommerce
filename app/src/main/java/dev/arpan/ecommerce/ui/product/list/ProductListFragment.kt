@@ -68,7 +68,7 @@ class ProductListFragment : Fragment() {
         if (viewModel.products.value == null) {
             viewModel.fetchProducts(category)
         }
-        viewModel.observeAppliedFilterForCategory(category)
+        viewModel.observeChangesForCategory(category)
         return binding.root
     }
 

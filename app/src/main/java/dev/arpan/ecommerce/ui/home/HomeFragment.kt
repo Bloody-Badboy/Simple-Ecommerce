@@ -44,11 +44,13 @@ class HomeFragment : NavigationDestinationFragment() {
         initViewPager()
 
         binding.btnSort.setOnClickListener {
-            val sortDialog = SortBottomSheetDialogFragment.newInstance()
-            sortDialog.onSortOrderSelected = {
-                viewModel.setSortByOrder(it)
+            selectedCategory?.let { category ->
+                val sortDialog = SortBottomSheetDialogFragment.newInstance(category)
+                sortDialog.onSortOrderSelected = { sortBy ->
+                    viewModel.setSortByOrder(category, sortBy)
+                }
+                sortDialog.show(childFragmentManager, SortBottomSheetDialogFragment.TAG)
             }
-            sortDialog.show(childFragmentManager, SortBottomSheetDialogFragment.TAG)
         }
 
         binding.btnFilter.setOnClickListener {

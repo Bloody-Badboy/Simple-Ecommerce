@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.arpan.ecommerce.data.model.SortBy
@@ -16,8 +17,11 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "sort_bottom_sheet_dialog"
+        private const val EXTRA_CATEGORY = "category"
 
-        fun newInstance() = SortBottomSheetDialogFragment()
+        fun newInstance(category: String) = SortBottomSheetDialogFragment().apply {
+            arguments = bundleOf(EXTRA_CATEGORY to category)
+        }
     }
 
     private val viewModel: HomeViewModel by viewModels({ requireParentFragment() })
@@ -25,7 +29,14 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private val binding: FragmentHomeSortSheetBinding
         get() = requireNotNull(_binding)
 
+    private lateinit var category: String
+
     var onSortOrderSelected: OnSortOrderSelected? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        category = requireNotNull(arguments?.getString(EXTRA_CATEGORY))
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,9 +58,8 @@ class SortBottomSheetDialogFragment : BottomSheetDialogFragment() {
         binding.rvOptions.adapter = singleChoiceListAdapter
         singleChoiceListAdapter.data = options.map { it.displayName }
 
-        viewModel.sortBy.observe(viewLifecycleOwner, {
-            singleChoiceListAdapter.selectedPosition = options.indexOf(it)
-        })
+        val selectedSortBy = viewModel.getSortByOrder(category)
+        singleChoiceListAdapter.selectedPosition = options.indexOf(selectedSortBy)
 
         return binding.root
     }

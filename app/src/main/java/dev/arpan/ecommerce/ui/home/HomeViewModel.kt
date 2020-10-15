@@ -28,9 +28,6 @@ class HomeViewModel @ViewModelInject constructor(
 
     val cartItemCount = productsRepository.cartItemCountFlow.asLiveData()
 
-    val sortBy: LiveData<SortBy>
-        get() = productsRepository.sortByOrderFlow.asLiveData()
-
     var currentPageIndex: Int = -1
 
     override fun onCleared() {
@@ -55,7 +52,11 @@ class HomeViewModel @ViewModelInject constructor(
         }
     }
 
-    fun setSortByOrder(sortBy: SortBy) {
-        productsRepository.sortBy = sortBy
+    fun getSortByOrder(category: String): SortBy {
+       return productsRepository.getSelectedSortByForCategory(category)
+    }
+
+    fun setSortByOrder(category: String, sortBy: SortBy) {
+        productsRepository.setSelectedSortByForCategory(category, sortBy)
     }
 }

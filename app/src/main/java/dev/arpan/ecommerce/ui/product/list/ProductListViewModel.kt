@@ -5,7 +5,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.AppliedFilterMap
@@ -13,8 +12,10 @@ import dev.arpan.ecommerce.data.model.ProductItem
 import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
 import dev.arpan.ecommerce.result.ResultWrapper
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class ProductListViewModel @ViewModelInject constructor(private val repository: ProductsRepository) :
     ViewModel() {
@@ -34,8 +35,9 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
     var previousSortByOrder: SortBy = SortBy.default()
     var previousAppliedFilterMap: AppliedFilterMap = emptyMap()
 
+    private val _sortBy = MutableLiveData<SortBy>()
     val sortBy: LiveData<SortBy>
-        get() = repository.sortByOrderFlow.asLiveData()
+        get() = _sortBy
 
     private val _appliedFilterMap = MutableLiveData<AppliedFilterMap>()
     val appliedFilterMap: LiveData<AppliedFilterMap>
@@ -43,7 +45,7 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
 
     fun fetchProducts(
         category: String,
-        sortBy: SortBy = repository.sortBy,
+        sortBy: SortBy = repository.getSelectedSortByForCategory(category),
         filterMap: AppliedFilterMap = repository.getAppliedFilterForCategory(category)
     ) {
         val selectedFilterOptions = SelectedFilterOptions(
@@ -66,16 +68,35 @@ class ProductListViewModel @ViewModelInject constructor(private val repository: 
         }
     }
 
-    fun observeAppliedFilterForCategory(category: String) {
+    fun observeChangesForCategory(category: String) {
+
         viewModelScope.launch {
-            repository.categoryAppliedFiltersFlow.collectLatest { map ->
-                map.iterator().forEach {
+            repository.categorySortByOrderFlow.collectLatest {map->
+                map.entries.forEach {
                     if (it.key == category) {
-                        _appliedFilterMap.value = it.value
+                        Timber.d("Sort Changed!")
+                        _sortBy.value = it.value
                         return@forEach
                     }
                 }
             }
+        }
+        viewModelScope.launch {
+            repository.categoryAppliedFiltersFlow.collect { map ->
+                map.entries.forEach {
+                    if (it.key == category) {
+                        _appliedFilterMap.value = it.value
+                        Timber.d("Filter Changed!")
+                        return@forEach
+                    }
+                }
+            }
+
+            /*repository.categorySortByOrderFlow.collectLatest { map ->
+                map.entries.forEach {
+
+                }
+            }*/
         }
     }
 }

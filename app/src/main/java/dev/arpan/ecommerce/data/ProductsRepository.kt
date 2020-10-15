@@ -29,9 +29,7 @@ interface ProductsRepository {
 
     val cartItemCountFlow: Flow<Int>
 
-    val sortByOrderFlow: Flow<SortBy>
-
-    var sortBy: SortBy
+    val categorySortByOrderFlow: Flow<Map<String, SortBy>>
 
     val categoryAppliedFiltersFlow: Flow<Map<String, AppliedFilterMap>>
 
@@ -56,6 +54,15 @@ interface ProductsRepository {
 
     suspend fun getCartProducts(): ResultWrapper<List<CartItem>>
 
+    fun setSelectedSortByForCategory(
+        category: String,
+        sortBy: SortBy
+    )
+
+    fun getSelectedSortByForCategory(
+        category: String
+    ): SortBy
+
     fun setAppliedFilterForCategory(
         category: String,
         filterMap: AppliedFilterMap
@@ -74,26 +81,21 @@ class DefaultProductsRepository(
         cartItemCountChannel.offer(newValue)
     }
 
-    override var sortBy: SortBy by Delegates.observable(SortBy.default()) { _, _, newValue ->
-        sortByChannel.offer(newValue)
-    }
-
     private val cartItemCountChannel: ConflatedBroadcastChannel<Int> by lazy {
         ConflatedBroadcastChannel<Int>().also { channel ->
             channel.offer(cartItemCount)
         }
     }
 
-    private val sortByChannel: ConflatedBroadcastChannel<SortBy> by lazy {
-        ConflatedBroadcastChannel<SortBy>().also { channel ->
-            channel.offer(sortBy)
-        }
+    private val categorySortByChannel: ConflatedBroadcastChannel<Map<String, SortBy>> by lazy {
+        ConflatedBroadcastChannel()
     }
 
     private val categoryAppliedFiltersChannel: ConflatedBroadcastChannel<Map<String, AppliedFilterMap>> by lazy {
         ConflatedBroadcastChannel()
     }
 
+    private val categorySelectedSortByMap = mutableMapOf<String, SortBy>()
     private val categoryAppliedFilterMap = mutableMapOf<String, AppliedFilterMap>()
 
     private val cartProducts = mutableSetOf<AddToCart>()
@@ -101,8 +103,8 @@ class DefaultProductsRepository(
     override val cartItemCountFlow: Flow<Int>
         get() = cartItemCountChannel.asFlow()
 
-    override val sortByOrderFlow: Flow<SortBy>
-        get() = sortByChannel.asFlow()
+    override val categorySortByOrderFlow: Flow<Map<String, SortBy>>
+        get() = categorySortByChannel.asFlow()
 
     override val categoryAppliedFiltersFlow: Flow<Map<String, AppliedFilterMap>>
         get() = categoryAppliedFiltersChannel.asFlow()
@@ -211,6 +213,15 @@ class DefaultProductsRepository(
                 )
             })
         }
+    }
+
+    override fun setSelectedSortByForCategory(category: String, sortBy: SortBy) {
+        categorySelectedSortByMap[category] = sortBy
+        categorySortByChannel.offer(categorySelectedSortByMap)
+    }
+
+    override fun getSelectedSortByForCategory(category: String): SortBy {
+        return categorySelectedSortByMap[category] ?: SortBy.default()
     }
 
     override fun setAppliedFilterForCategory(
