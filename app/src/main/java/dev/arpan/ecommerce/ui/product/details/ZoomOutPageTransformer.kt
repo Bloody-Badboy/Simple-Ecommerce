@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Arpan Sarkar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dev.arpan.ecommerce.ui.product.details
 
 import android.view.View
@@ -33,8 +49,10 @@ class ZoomOutPageTransformer : ViewPager.PageTransformer {
                     scaleY = scaleFactor
 
                     // Fade the page relative to its size.
-                    alpha = (MIN_ALPHA +
-                        (((scaleFactor - MIN_SCALE) / (1 - MIN_SCALE)) * (1 - MIN_ALPHA)))
+                    alpha = (
+                        MIN_ALPHA +
+                            (((scaleFactor - MIN_SCALE) / (1 - MIN_SCALE)) * (1 - MIN_ALPHA))
+                        )
                 }
                 else -> { // (1,+Infinity]
                     // This page is way off-screen to the right.

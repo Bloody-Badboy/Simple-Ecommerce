@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Arpan Sarkar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dev.arpan.ecommerce.data.source.remote
 
 import dev.arpan.ecommerce.data.model.Filter
@@ -9,7 +25,7 @@ import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
 import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
-import java.util.UUID
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -30,14 +46,56 @@ interface ProductsRemoteDataSource {
     suspend fun getFiltersForCategory(category: String): List<Filter>
 }
 
-class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
+class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
 
-    private val mockProducts = mutableListOf<ProductItem>()
+    private val mockProducts = mutableListOf<ProductInfo>()
     private val mockCategories = listOf(
         ProductCategory(name = "Top Wear", "top_wear"),
         ProductCategory(name = "Bottom Wear", "bottom_wear"),
         ProductCategory(name = "Jewellery", "jewellery")
     )
+
+    data class ProductInfo(
+        val productId: Long,
+        val productName: String,
+        val price: String,
+        val mrp: String,
+        val discount: String,
+        val category: String,
+        val imageUrls: List<String> = emptyList(),
+        var tag: String? = null,
+        var isWishListed: Boolean,
+        val inStoke: Boolean,
+        val rating: Double,
+        val availableSize: List<String> = emptyList()
+    ) {
+        fun toProductItem() = ProductItem(
+            productId = productId,
+            productName = productName,
+            price = price,
+            mrp = mrp,
+            discount = discount,
+            imageUrl = imageUrls[0],
+            category = category,
+            tag = tag,
+            isWishListed = isWishListed,
+            inStoke = inStoke
+        )
+
+        fun toProductDetails(suggested: List<ProductItem>) = ProductDetails(
+            productId = productId,
+            productName = productName,
+            price = price,
+            mrp = mrp,
+            discount = discount,
+            imageUrls = imageUrls,
+            isWishListed = isWishListed,
+            inStoke = inStoke,
+            rating = rating,
+            availableSize = availableSize,
+            suggestedProducts = suggested
+        )
+    }
 
     init {
         mockProducts.apply {
@@ -46,19 +104,35 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
                 val inStock = Random.nextBoolean()
                 val mrp = Random.nextInt(100, 1000)
                 val discount = max(10, Random.nextInt(50))
-
+                val allSizes = listOf(
+                    "S",
+                    "M",
+                    "L",
+                    "XL",
+                    "2XL"
+                )
                 add(
-                    ProductItem(
+                    ProductInfo(
                         productId = i.toLong(),
                         productName = "Product ${mockCategories[categoryIndex].name} #${i + 1}",
                         price = (mrp - mrp * (discount / 100f)).roundToInt().toString(),
                         mrp = mrp.toString(),
                         discount = discount.toString(),
-                        imageUrl = "https://picsum.photos/seed/$i/200/300?random=${i + 1}",
+                        imageUrls = listOf(
+                            "https://picsum.photos/seed/$i/480/640?random=$i",
+                            "https://picsum.photos/seed/${i + 1}/480/640?random=${i + 1}",
+                            "https://picsum.photos/seed/${i + 2}/480/640?random=${i + 2}",
+                            "https://picsum.photos/seed/${i + 3}/480/640?random=${i + 3}}"
+                        ),
                         category = mockCategories[categoryIndex].value,
                         tag = if (Random.nextBoolean() && inStock) "New Arrival" else null,
-                        isWishlisted = Random.nextBoolean(),
-                        inStoke = inStock
+                        isWishListed = Random.nextBoolean(),
+                        inStoke = inStock,
+                        rating = Random.nextDouble(1.toDouble(), 5.toDouble()),
+                        availableSize = if (mockCategories[categoryIndex].value == "jewellery") emptyList() else allSizes.subList(
+                            0,
+                            Random.nextInt(1, allSizes.size)
+                        )
                     )
                 )
             }
@@ -75,6 +149,7 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
     ): List<ProductItem> {
         var products = mockProducts.filter { it.category == category }
 
+        var includeOutOfStock = false
         selectedFilterOptions.filterMap.entries.forEach { entry ->
             if (entry.key.value == "discount") {
                 if (entry.value.isNotEmpty()) {
@@ -97,13 +172,22 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
                     }
                 }
             }
+            if (entry.key.value == "size") {
+                if (entry.value.isNotEmpty()) {
+                    products = products.filter {
+                        it.availableSize.any { size ->
+                            entry.value.map { option -> option.value }
+                                .contains(size.toLowerCase(Locale.getDefault()))
+                        }
+                    }
+                }
+            }
             if (entry.key.value == "availability") {
                 if (entry.value.isNotEmpty()) {
-                    products = products.filter { it.inStoke }
+                    includeOutOfStock = true
                 }
             }
         }
-
 
         return when (selectedFilterOptions.sortBy) {
             SortBy.PRICE_HIGH_TO_LOW -> {
@@ -115,43 +199,28 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             else -> {
                 products
             }
+        }.filter {
+            if (includeOutOfStock) {
+                true
+            } else {
+                it.inStoke
+            }
+        }.map {
+            it.toProductItem()
         }
     }
 
     override suspend fun searchProduct(query: String): List<ProductItem> {
-        return mockProducts.filter { it.productName.contains(query) }
+        return mockProducts.filter { it.productName.contains(query) }.map {
+            it.toProductItem()
+        }
     }
 
     override suspend fun getProductDetails(productId: Long): ProductDetails {
         val product = mockProducts.first { it.productId == productId }
-        val allSizes = listOf(
-            "S",
-            "M",
-            "L",
-            "XL",
-            "2XL"
-        )
-        return ProductDetails(
-            productId = product.productId,
-            productName = product.productName,
-            price = product.price,
-            mrp = product.mrp,
-            discount = product.discount,
-            imageUrls = listOf(
-                "https://picsum.photos/seed/${productId}/480/640?random=${UUID.randomUUID()}",
-                "https://picsum.photos/seed/${productId + 1}/480/640?random=${UUID.randomUUID()}",
-                "https://picsum.photos/seed/${productId + 2} /480/640?random=${UUID.randomUUID()}",
-                "https://picsum.photos/seed/${productId + 3}/480/640?random=${UUID.randomUUID()}"
-            ),
-            isWishlisted = product.isWishlisted,
-            inStoke = product.inStoke,
-            rating = Random.nextDouble(1.toDouble(), 5.toDouble()),
-            availableSize = if (product.category == "jewellery") emptyList() else allSizes.subList(
-                0,
-                Random.nextInt(1, allSizes.size)
-            ),
-            suggestedProducts = mockProducts.filter { it.category == product.category && it.productId != productId }
-                .take(8)
+        return product.toProductDetails(
+            suggested = mockProducts.filter { it.category == product.category && it.productId != productId }
+                .take(8).map { it.toProductItem() }
         )
     }
 
@@ -225,7 +294,7 @@ class DefaultProductsRemoteDataSource : ProductsRemoteDataSource {
             ),
             filterType = FilterType.SingleChoice(
                 options = listOf(
-                    FilterOption(name = "Exclude Out Of Stock", value = "oos")
+                    FilterOption(name = "Include Out Of Stock", value = "oos")
                 )
             )
         )

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Arpan Sarkar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dev.arpan.ecommerce.ui.filter
 
 import android.os.Bundle
@@ -81,19 +97,22 @@ class FilterFragment : NavigationDestinationFragment() {
         binding.rvName.adapter = filterNameAdapter
         binding.rvName.itemAnimator = null
 
-        viewModel.filters.observe(viewLifecycleOwner, {
-            filters = it
-            for (i in it.indices) {
-                selectedFilters.put(i, emptyList())
-            }
+        viewModel.filters.observe(
+            viewLifecycleOwner,
+            {
+                filters = it
+                for (i in it.indices) {
+                    selectedFilters.put(i, emptyList())
+                }
 
-            mapAppliedFilterMapToIndices()
+                mapAppliedFilterMapToIndices()
 
-            if (it.isNotEmpty()) {
-                updateFilterNameList(0)
-                updateFilterOptionsList(0, it[0].filterType)
+                if (it.isNotEmpty()) {
+                    updateFilterNameList(0)
+                    updateFilterOptionsList(0, it[0].filterType)
+                }
             }
-        })
+        )
 
         viewModel.fetchCategoryFilters(args.category)
 
@@ -136,13 +155,15 @@ class FilterFragment : NavigationDestinationFragment() {
     }
 
     private fun updateFilterNameList(filterNameIndex: Int) {
-        filterNameAdapter.submitList(filters.mapIndexed { index, filter ->
-            FilterNameItem(
-                text = filter.filterName.name,
-                inSelected = index == filterNameIndex,
-                isFilterApplied = selectedFilters[index].isNotEmpty()
-            )
-        })
+        filterNameAdapter.submitList(
+            filters.mapIndexed { index, filter ->
+                FilterNameItem(
+                    text = filter.filterName.name,
+                    inSelected = index == filterNameIndex,
+                    isFilterApplied = selectedFilters[index].isNotEmpty()
+                )
+            }
+        )
     }
 
     private fun updateFilterOptionsList(filterNameIndex: Int, filterType: FilterType) {

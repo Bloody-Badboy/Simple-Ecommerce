@@ -85,7 +85,7 @@
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:visibility="gone"
-            app:icon="@{product.wishlisted ? @drawable/ic_wishlist_added : @drawable/ic_wishlist_normal}"
+            app:icon="@{product.wishListed ? @drawable/ic_wishlist_added : @drawable/ic_wishlist_normal}"
             app:iconPadding="0dp"
             app:iconTint="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"

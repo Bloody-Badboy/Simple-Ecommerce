@@ -6,11 +6,16 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.0.1"
+        classpath 'com.android.tools.build:gradle:4.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.dagger:hilt-android-gradle-plugin:2.28-alpha'
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.0"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1"
     }
+}
+
+
+plugins {
+    id("com.diffplug.gradle.spotless") version "4.5.1"
 }
 
 allprojects {
@@ -32,6 +37,28 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+subprojects {
+    apply plugin: "com.diffplug.gradle.spotless"
+    ext.ktlintVer = "0.39.0"
+
+    spotless {
+        kotlin {
+            target("**/*.kt")
+            ktlint(ktlintVer)
+            licenseHeaderFile rootProject.file("copyright.kt")
+        }
+
+        format 'xml', {
+            target '**/*.xml'
+            indentWithSpaces()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+    tasks.whenTaskAdded {
+        if (name == "preBuild") {
+            mustRunAfter("spotlessCheck")
+        }
+    }
 }

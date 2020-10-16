@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Arpan Sarkar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dev.arpan.ecommerce.ui.product.details
 
 import android.graphics.drawable.LayerDrawable
@@ -60,31 +76,37 @@ class ProductDetailsFragment : NavigationDestinationFragment() {
             viewModel.addItemToCart(args.productId, size)
         }
 
-        viewModel.productDetails.observe(viewLifecycleOwner, {
-            productListAdapter.submitList(it.suggestedProducts)
-        })
+        viewModel.productDetails.observe(
+            viewLifecycleOwner,
+            {
+                productListAdapter.submitList(it.suggestedProducts)
+            }
+        )
 
-        viewModel.addToCartState.observe(viewLifecycleOwner, EventObserver {
-            when (it) {
-                is AddToCartState.Adding -> {
-                    binding.fabAddToCart.hide()
-                    Snackbar.make(
-                        binding.root,
-                        "Adding item to cart...",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
-                is AddToCartState.Added -> {
-                    Snackbar.make(
-                        binding.root,
-                        "Item added to cart",
-                        Snackbar.LENGTH_LONG
-                    ).setAction("View Cart") {
-                        findNavController().navigate(toCart())
-                    }.show()
+        viewModel.addToCartState.observe(
+            viewLifecycleOwner,
+            EventObserver {
+                when (it) {
+                    is AddToCartState.Adding -> {
+                        binding.fabAddToCart.hide()
+                        Snackbar.make(
+                            binding.root,
+                            "Adding item to cart...",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                    is AddToCartState.Added -> {
+                        Snackbar.make(
+                            binding.root,
+                            "Item added to cart",
+                            Snackbar.LENGTH_LONG
+                        ).setAction("View Cart") {
+                            findNavController().navigate(toCart())
+                        }.show()
+                    }
                 }
             }
-        })
+        )
 
         if (viewModel.productDetails.value == null) {
             viewModel.fetchProductDetails(args.productId)
@@ -114,9 +136,12 @@ class ProductDetailsFragment : NavigationDestinationFragment() {
             }
         }
 
-        viewModel.cartItemCount.observe(viewLifecycleOwner, {
-            updateCartItemCount(it)
-        })
+        viewModel.cartItemCount.observe(
+            viewLifecycleOwner,
+            {
+                updateCartItemCount(it)
+            }
+        )
     }
 
     private fun updateCartItemCount(count: Int) {

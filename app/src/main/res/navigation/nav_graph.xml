@@ -53,7 +53,7 @@
         android:id="@+id/nav_product_filter"
         android:name="dev.arpan.ecommerce.ui.filter.FilterFragment"
         android:label="Filter"
-        tools:layout="@layout/fragment_filter" >
+        tools:layout="@layout/fragment_filter">
         <argument
             android:name="category"
             app:argType="string" />
