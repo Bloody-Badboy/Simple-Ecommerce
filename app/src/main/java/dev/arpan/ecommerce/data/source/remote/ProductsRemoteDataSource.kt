@@ -16,6 +16,8 @@
 
 package dev.arpan.ecommerce.data.source.remote
 
+import dev.arpan.ecommerce.data.model.AddToCart
+import dev.arpan.ecommerce.data.model.CartItem
 import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.data.model.FilterName
 import dev.arpan.ecommerce.data.model.FilterOption
@@ -25,10 +27,13 @@ import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.data.model.ProductItem
 import dev.arpan.ecommerce.data.model.SelectedFilterOptions
 import dev.arpan.ecommerce.data.model.SortBy
+import kotlinx.coroutines.delay
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
+
+private const val SIMULATE_NETWORK_DELAY = true
 
 interface ProductsRemoteDataSource {
 
@@ -44,6 +49,14 @@ interface ProductsRemoteDataSource {
     suspend fun getProductDetails(productId: Long): ProductDetails
 
     suspend fun getFiltersForCategory(category: String): List<Filter>
+
+    suspend fun getCartProducts(): List<CartItem>
+
+    suspend fun isProductInCart(productId: Long): Boolean
+
+    suspend fun addProductToCart(addToCart: AddToCart): Boolean
+
+    suspend fun removeProductFromCart(productId: Long): Boolean
 }
 
 class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
@@ -95,7 +108,20 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
             availableSize = availableSize,
             suggestedProducts = suggested
         )
+
+        fun toCartItem(selectedSize: String?) = CartItem(
+            productId = productId,
+            productName = productName,
+            price = price,
+            mrp = mrp,
+            discount = discount,
+            imageUrl = imageUrls[0],
+            selectedSize = selectedSize,
+            inStoke = inStoke
+        )
     }
+
+    private val cartProducts = mutableSetOf<AddToCart>()
 
     init {
         mockProducts.apply {
@@ -140,6 +166,7 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
     }
 
     override suspend fun getCategories(): List<ProductCategory> {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
         return mockCategories
     }
 
@@ -147,6 +174,8 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
         category: String,
         selectedFilterOptions: SelectedFilterOptions
     ): List<ProductItem> {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
+
         var products = mockProducts.filter { it.category == category }
 
         var includeOutOfStock = false
@@ -211,12 +240,14 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
     }
 
     override suspend fun searchProduct(query: String): List<ProductItem> {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
         return mockProducts.filter { it.productName.contains(query) }.map {
             it.toProductItem()
         }
     }
 
     override suspend fun getProductDetails(productId: Long): ProductDetails {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
         val product = mockProducts.first { it.productId == productId }
         return product.toProductDetails(
             suggested = mockProducts.filter { it.category == product.category && it.productId != productId }
@@ -225,6 +256,7 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
     }
 
     override suspend fun getFiltersForCategory(category: String): List<Filter> {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
         val filterOptionSize = Filter(
             filterName = FilterName(
                 name = "Size",
@@ -315,5 +347,29 @@ class DefaultProductsRemoteDataSource() : ProductsRemoteDataSource {
                 filterOptionAvailability
             )
         }
+    }
+
+    override suspend fun getCartProducts(): List<CartItem> {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
+        return cartProducts.map {
+            mockProducts.find { info -> info.productId == it.productId }.let { productInfo ->
+                return@map productInfo!!.toCartItem(it.selectedSize)
+            }
+        }
+    }
+
+    override suspend fun isProductInCart(productId: Long): Boolean {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
+        return cartProducts.find { it.productId == productId } != null
+    }
+
+    override suspend fun addProductToCart(addToCart: AddToCart): Boolean {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
+        return cartProducts.add(addToCart)
+    }
+
+    override suspend fun removeProductFromCart(productId: Long): Boolean {
+        if (SIMULATE_NETWORK_DELAY) delay(1000)
+        return cartProducts.removeAll { it.productId == productId }
     }
 }
