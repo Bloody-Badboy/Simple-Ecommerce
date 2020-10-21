@@ -80,9 +80,10 @@ class ProductDetailsViewModel @ViewModelInject constructor(
             )
 
             _addToCartState.value = Event(AddToCartState.Adding)
-            productsRepository.addProductToCart(addToCart)
-            _addToCartState.value = Event(AddToCartState.Added)
-            _isProductInCart.value = true
+            if(productsRepository.addProductToCart(addToCart)) {
+                _addToCartState.value = Event(AddToCartState.Added)
+                _isProductInCart.value = true
+            }
         }
     }
 }
