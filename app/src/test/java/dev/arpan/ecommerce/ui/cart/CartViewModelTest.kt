@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package dev.arpan.ecommerce
+package dev.arpan.ecommerce.ui.cart
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import dev.arpan.ecommerce.MainCoroutineRule
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.CartItem
+import dev.arpan.ecommerce.getOrAwaitValue
 import dev.arpan.ecommerce.result.ResultWrapper
-import dev.arpan.ecommerce.ui.cart.CartViewModel
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -89,18 +89,32 @@ class CartViewModelTest {
         }
 
     @Test
-    fun `products list updated after product removed`() = mainCoroutineRule.runBlockingTest {
+    fun `products list updated if product removed`() = mainCoroutineRule.runBlockingTest {
         `when`(productsRepository.getCartProducts()).thenReturn(ResultWrapper.Success(CART_ITEMS))
+        `when`(productsRepository.removeProductFromCart(1)).thenReturn(true)
         cartViewModel.fetchCartProducts()
         val products = cartViewModel.products.getOrAwaitValue()
         cartViewModel.removeProductFromCart(1)
         val products2 = cartViewModel.products.getOrAwaitValue()
-        assertNotSame(products, products2)
+        assertEquals(products.size, 2)
+        assertEquals(products2.size, 1)
+    }
+
+    @Test
+    fun `products list does updated if product not removed`() = mainCoroutineRule.runBlockingTest {
+        `when`(productsRepository.getCartProducts()).thenReturn(ResultWrapper.Success(CART_ITEMS))
+        `when`(productsRepository.removeProductFromCart(1)).thenReturn(false)
+        cartViewModel.fetchCartProducts()
+        val products = cartViewModel.products.getOrAwaitValue()
+        cartViewModel.removeProductFromCart(1)
+        val products2 = cartViewModel.products.getOrAwaitValue()
+        assertEquals(products.size, products2.size)
     }
 
     @Test
     fun `priceDetails updated after product removed`() = mainCoroutineRule.runBlockingTest {
         `when`(productsRepository.getCartProducts()).thenReturn(ResultWrapper.Success(CART_ITEMS))
+        `when`(productsRepository.removeProductFromCart(1)).thenReturn(true)
         cartViewModel.fetchCartProducts()
         cartViewModel.removeProductFromCart(1)
         val priceDetails = cartViewModel.priceDetails.getOrAwaitValue()

@@ -66,16 +66,26 @@ class CartViewModel @ViewModelInject constructor(private val repository: Product
         viewModelScope.launch {
 
             _products.value = _products.value?.map { cartItem ->
-                cartItem.copy(isRemoving = cartItem.productId == productId)
+                return@map if (cartItem.productId == productId)
+                    cartItem.copy(isRemoving = true)
+                else
+                    cartItem
             }
 
-            repository.removeProductFromCart(productId)
-
-            _products.value?.filter { cartItem ->
-                cartItem.productId != productId
-            }?.run {
-                _priceDetails.value = calculateCartPriceDetails(this)
-                _products.value = this
+            if (repository.removeProductFromCart(productId)) {
+                _products.value?.filter { cartItem ->
+                    cartItem.productId != productId
+                }?.run {
+                    _priceDetails.value = calculateCartPriceDetails(this)
+                    _products.value = this
+                }
+            } else {
+                _products.value = _products.value?.map { cartItem ->
+                    return@map if (cartItem.productId == productId)
+                        cartItem.copy(isRemoving = false)
+                    else
+                        cartItem
+                }
             }
         }
     }
