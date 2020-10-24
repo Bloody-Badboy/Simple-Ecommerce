@@ -21,10 +21,12 @@ import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.get
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import dev.arpan.ecommerce.R
 import dev.arpan.ecommerce.data.model.Filter
 import dev.arpan.ecommerce.data.model.FilterName
 import dev.arpan.ecommerce.data.model.FilterOption
@@ -49,6 +51,18 @@ class FilterFragment : NavigationDestinationFragment() {
     private var filters: List<Filter> = emptyList()
 
     private val selectedFilters = SparseArray<List<Int>>()
+    private val isFilterSelected: Boolean
+        get() {
+            var selected = false
+            for (i in 0 until selectedFilters.size()) {
+                if (selectedFilters[i].isNotEmpty()) {
+                    selected = true
+                    break
+                }
+            }
+            return selected
+        }
+    private var fromClearFilters = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -105,7 +119,11 @@ class FilterFragment : NavigationDestinationFragment() {
                     selectedFilters.put(i, emptyList())
                 }
 
-                mapAppliedFilterMapToIndices()
+                if (!fromClearFilters) {
+                    fromClearFilters = true
+                    mapAppliedFilterMapToIndices()
+                }
+                updateMenuClearFiltersState()
 
                 if (it.isNotEmpty()) {
                     updateFilterNameList(0)
@@ -122,6 +140,24 @@ class FilterFragment : NavigationDestinationFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        with(binding.toolbar) {
+            inflateMenu(R.menu.menu_filter)
+            menu.findItem(R.id.action_clear_filters).isEnabled = false
+            setOnMenuItemClickListener {
+                if (it.itemId == R.id.action_clear_filters) {
+                    fromClearFilters = true
+                    viewModel.fetchCategoryFilters(args.category)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 
     private fun mapAppliedFilterMapToIndices() {
@@ -166,6 +202,10 @@ class FilterFragment : NavigationDestinationFragment() {
         )
     }
 
+    private fun updateMenuClearFiltersState() {
+        binding.toolbar.menu.findItem(R.id.action_clear_filters).isEnabled = isFilterSelected
+    }
+
     private fun updateFilterOptionsList(filterNameIndex: Int, filterType: FilterType) {
         when (filterType) {
             is FilterType.SingleChoice -> {
@@ -174,6 +214,7 @@ class FilterFragment : NavigationDestinationFragment() {
                         filterNameIndex, if (position < 0) emptyList() else listOf(position)
                     )
                     updateFilterNameList(filterNameIndex)
+                    updateMenuClearFiltersState()
                 }.apply {
                     data = filterType.options.map { it.name }
                     if (selectedFilters[filterNameIndex].isNotEmpty()) {
@@ -186,6 +227,7 @@ class FilterFragment : NavigationDestinationFragment() {
                     MultipleChoiceListAdapter { positions ->
                         selectedFilters.put(filterNameIndex, positions.toList())
                         updateFilterNameList(filterNameIndex)
+                        updateMenuClearFiltersState()
                     }.apply {
                         data = filterType.options.map { it.name }
                         defaultSelections = selectedFilters[filterNameIndex]

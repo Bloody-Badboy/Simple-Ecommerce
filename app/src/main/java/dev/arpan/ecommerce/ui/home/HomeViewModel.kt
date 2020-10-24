@@ -44,6 +44,10 @@ class HomeViewModel @ViewModelInject constructor(
 
     val cartItemCount = productsRepository.cartItemCountFlow.asLiveData()
 
+    private val _appliedFilterCount = MutableLiveData<Int>()
+    val appliedFilterCount: LiveData<Int>
+        get() = _appliedFilterCount
+
     var currentPageIndex: Int = -1
 
     override fun onCleared() {
@@ -66,6 +70,17 @@ class HomeViewModel @ViewModelInject constructor(
                 }
             }
         }
+    }
+
+    fun selectedCategory(category: String) {
+        val appliedFilter = productsRepository.getAppliedFilterForCategory(category)
+        var filterCount = 0
+        appliedFilter.entries.forEach {
+            if (it.value.isNotEmpty()) {
+                filterCount++
+            }
+        }
+        _appliedFilterCount.value = filterCount
     }
 
     fun getSortByOrder(category: String): SortBy {

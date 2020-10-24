@@ -38,6 +38,7 @@ import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toProductFil
 import dev.arpan.ecommerce.ui.home.HomeFragmentDirections.Companion.toProductSearch
 import dev.arpan.ecommerce.ui.product.list.ProductListFragment
 import dev.arpan.ecommerce.utils.onTabSelected
+import timber.log.Timber
 
 @AndroidEntryPoint
 class HomeFragment : NavigationDestinationFragment() {
@@ -75,6 +76,12 @@ class HomeFragment : NavigationDestinationFragment() {
             }
         }
 
+        viewModel.appliedFilterCount.observe(
+            viewLifecycleOwner,
+            {
+                Timber.d("$selectedCategory -> $it")
+            }
+        )
         return binding.root
     }
 
@@ -144,7 +151,10 @@ class HomeFragment : NavigationDestinationFragment() {
         )
 
         binding.tabs.onTabSelected { tab ->
-            selectedCategory = homeAdapter.categories[tab.position].value
+            homeAdapter.categories[tab.position].value.let { category ->
+                selectedCategory = category
+                viewModel.selectedCategory(category)
+            }
         }
     }
 
