@@ -17,15 +17,23 @@
 package dev.arpan.ecommerce.ui.main
 
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.databinding.DataBindingUtil
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.navigation.ui.setupWithNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.arpan.ecommerce.R
+import dev.arpan.ecommerce.databinding.ActivityMainBinding
+import dev.arpan.ecommerce.databinding.NavViewHeaderBinding
 import dev.arpan.ecommerce.ui.NavigationHost
 
 @AndroidEntryPoint
@@ -38,25 +46,70 @@ class MainActivity : AppCompatActivity(), NavigationHost {
     }
 
     private val viewModel: MainViewModel by viewModels()
+    private var _binding: ActivityMainBinding? = null
+    private val binding: ActivityMainBinding
+        get() = requireNotNull(_binding)
+
+    private lateinit var navHeaderBinding: NavViewHeaderBinding
+    private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_ECommerce)
-        setContentView(R.layout.activity_main)
+        _binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        navHeaderBinding = NavViewHeaderBinding.inflate(layoutInflater)
+
         setSupportActionBar(findViewById(R.id.toolbar))
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+
         navController = navHostFragment.navController
+        appBarConfiguration = AppBarConfiguration(TOP_LEVEL_DESTINATIONS, binding.drawerLayout)
+
+        binding.navView.apply {
+            addHeaderView(navHeaderBinding.root)
+
+            var navItemBackground =
+                AppCompatResources.getDrawable(context, R.drawable.nav_item_background)
+            if (navItemBackground != null) {
+                val tint = AppCompatResources.getColorStateList(
+                    context, R.color.nav_item_background_tint
+                )
+                navItemBackground = DrawableCompat.wrap(navItemBackground.mutate())
+                navItemBackground.setTintList(tint)
+            }
+
+            itemBackground = navItemBackground
+            setupWithNavController(navController)
+        }
+
+        navController.addOnDestinationChangedListener { _, destination, arguments ->
+
+            val isTopLevelDestination = TOP_LEVEL_DESTINATIONS.contains(destination.id)
+            val lockMode = if (isTopLevelDestination) {
+                DrawerLayout.LOCK_MODE_UNLOCKED
+            } else {
+                DrawerLayout.LOCK_MODE_LOCKED_CLOSED
+            }
+            binding.drawerLayout.setDrawerLockMode(lockMode)
+        }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
+    }
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
     override fun registerToolbarWithNavigation(toolbar: Toolbar) {
-        val appBarConfiguration = AppBarConfiguration(TOP_LEVEL_DESTINATIONS)
         toolbar.setupWithNavController(navController, appBarConfiguration)
     }
 }
