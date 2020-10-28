@@ -7,14 +7,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_margin="4dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:background="@drawable/sl_product_size"
         android:gravity="center"
         android:paddingHorizontal="8dp"
         android:paddingVertical="8dp"
         android:textAllCaps="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="@color/product_size_text_color"
         android:textStyle="bold"
         tools:text="S" />
 </layout>
