@@ -23,12 +23,15 @@ import androidx.viewpager.widget.PagerAdapter
 import dev.arpan.ecommerce.bindImageUrl
 import dev.arpan.ecommerce.databinding.ItemProductImageSliderBinding
 
-class ProductImageSliderAdapter : PagerAdapter() {
+class ProductImageSliderAdapter :
+    PagerAdapter() {
     var imageUrls: List<String> = emptyList()
         set(value) {
             field = value
             notifyDataSetChanged()
         }
+
+    var onItemClick: ((position: Int) -> Unit)? = null
 
     override fun getCount() = imageUrls.size
 
@@ -40,6 +43,9 @@ class ProductImageSliderAdapter : PagerAdapter() {
             container,
             false
         ).apply {
+            root.setOnClickListener {
+                onItemClick?.invoke(position)
+            }
             ivPhoto.bindImageUrl(imageUrls[position])
 
             container.addView(root, 0)

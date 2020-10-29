@@ -36,6 +36,7 @@ import dev.arpan.ecommerce.ui.NavigationDestinationFragment
 import dev.arpan.ecommerce.ui.drawable.CountDrawable
 import dev.arpan.ecommerce.ui.product.common.ProductListAdapter
 import dev.arpan.ecommerce.ui.product.details.ProductDetailsFragmentDirections.Companion.toCart
+import dev.arpan.ecommerce.ui.product.details.ProductDetailsFragmentDirections.Companion.toImageViewer
 
 @AndroidEntryPoint
 class ProductDetailsFragment : NavigationDestinationFragment() {
@@ -142,6 +143,13 @@ class ProductDetailsFragment : NavigationDestinationFragment() {
                 updateCartItemCount(it)
             }
         )
+
+        binding.executePendingBindings()
+        (binding.pagerProductImages.adapter as? ProductImageSliderAdapter)?.let {
+            it.onItemClick = { position ->
+                findNavController().navigate(toImageViewer(it.imageUrls.toTypedArray(), position))
+            }
+        }
     }
 
     private fun updateCartItemCount(count: Int) {

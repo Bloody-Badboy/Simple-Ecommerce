@@ -32,6 +32,9 @@
         <action
             android:id="@+id/to_cart"
             app:destination="@id/nav_cart" />
+        <action
+            android:id="@+id/to_image_viewer"
+            app:destination="@id/nav_image_viewer" />
     </fragment>
 
     <action
@@ -57,5 +60,16 @@
         <argument
             android:name="category"
             app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_image_viewer"
+        android:name="dev.arpan.ecommerce.ui.image.viewer.ImageViewerFragment"
+        tools:layout="@layout/fragment_image_viewer" >
+        <argument
+            android:name="imageUrls"
+            app:argType="string[]" />
+        <argument
+            android:name="position"
+            app:argType="integer" />
     </fragment>
 </navigation>
