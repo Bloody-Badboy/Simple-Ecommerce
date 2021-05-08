@@ -16,20 +16,22 @@
 
 package dev.arpan.ecommerce.ui.product.details
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.AddToCart
 import dev.arpan.ecommerce.data.model.ProductDetails
 import dev.arpan.ecommerce.result.Event
 import dev.arpan.ecommerce.result.ResultWrapper
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProductDetailsViewModel @ViewModelInject constructor(
+@HiltViewModel
+class ProductDetailsViewModel @Inject constructor(
     private val productsRepository: ProductsRepository
 ) :
     ViewModel() {

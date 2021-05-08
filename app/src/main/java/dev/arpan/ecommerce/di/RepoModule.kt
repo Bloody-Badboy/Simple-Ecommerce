@@ -19,7 +19,7 @@ package dev.arpan.ecommerce.di
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.components.SingletonComponent
 import dev.arpan.ecommerce.data.DefaultProductsRepository
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.source.local.DefaultProductsLocalDataSource
@@ -28,7 +28,7 @@ import dev.arpan.ecommerce.data.source.remote.DefaultProductsRemoteDataSource
 import dev.arpan.ecommerce.data.source.remote.ProductsRemoteDataSource
 import javax.inject.Singleton
 
-@InstallIn(ApplicationComponent::class)
+@InstallIn(SingletonComponent::class)
 @Module
 class RepoModule {
 

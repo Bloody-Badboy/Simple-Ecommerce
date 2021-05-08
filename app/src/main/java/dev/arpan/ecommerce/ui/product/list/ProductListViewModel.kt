@@ -16,12 +16,12 @@
 
 package dev.arpan.ecommerce.ui.product.list
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.AppliedFilterMap
 import dev.arpan.ecommerce.data.model.ProductItem
@@ -32,8 +32,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class ProductListViewModel @ViewModelInject constructor(private val repository: ProductsRepository) :
+@HiltViewModel
+class ProductListViewModel @Inject constructor(private val repository: ProductsRepository) :
     ViewModel() {
 
     private val _isLoading = MutableLiveData<Boolean>()

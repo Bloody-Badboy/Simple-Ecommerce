@@ -16,18 +16,20 @@
 
 package dev.arpan.ecommerce.ui.product.search
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.arpan.ecommerce.data.ProductsRepository
 import dev.arpan.ecommerce.data.model.ProductItem
 import dev.arpan.ecommerce.result.ResultWrapper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SearchProductViewModel @ViewModelInject constructor(private val repository: ProductsRepository) :
+@HiltViewModel
+class SearchProductViewModel @Inject constructor(private val repository: ProductsRepository) :
     ViewModel() {
     companion object {
         const val QUERY_MIN_LENGTH = 2

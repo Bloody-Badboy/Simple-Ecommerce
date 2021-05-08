@@ -16,9 +16,11 @@
 
 package dev.arpan.ecommerce.ui.main
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.arpan.ecommerce.data.ProductsRepository
+import javax.inject.Inject
 
-class MainViewModel @ViewModelInject constructor(private val repository: ProductsRepository) :
+@HiltViewModel
+class MainViewModel @Inject constructor(private val repository: ProductsRepository) :
     ViewModel()

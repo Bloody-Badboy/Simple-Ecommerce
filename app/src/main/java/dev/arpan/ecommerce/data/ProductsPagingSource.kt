@@ -17,10 +17,15 @@
 package dev.arpan.ecommerce.data
 
 import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import dev.arpan.ecommerce.data.model.ProductItem
 
 class ProductsPagingSource : PagingSource<Int, ProductItem>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ProductItem> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRefreshKey(state: PagingState<Int, ProductItem>): Int? {
         TODO("Not yet implemented")
     }
 }
