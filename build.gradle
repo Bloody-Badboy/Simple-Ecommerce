@@ -3,6 +3,8 @@ buildscript {
     ext.kotlin_version = "1.4.32"
     repositories {
         google()
+        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.2.0'
@@ -20,6 +22,8 @@ plugins {
 allprojects {
     repositories {
         google()
+        mavenCentral()
+        jcenter()
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
